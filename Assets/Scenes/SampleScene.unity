@@ -38,13 +38,13 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.44657844, g: 0.49641222, b: 0.57481694, a: 1}
+  m_IndirectSpecularColor: {r: 0, g: 0, b: 0, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 11
-  m_GIWorkflowMode: 0
+  m_GIWorkflowMode: 1
   m_GISettings:
     serializedVersion: 2
     m_BounceScale: 1
@@ -281,31 +281,35 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   healthSegmentArray:
   - segmentName: Shield
-    maxHealth: 100
-    segmentType: 1
-    startActive: 1
+    maxHealth: 0
+    startActive: 0
     carryDamageToNextSegment: 0
+    segmentAttributes: 00000000000000000000000000000000
     canRecharge: 0
-    rechargeRate: 10
-    rechargeDelay: 5
-    armourDamageReduction: 10
-    minimumArmourDamage: 1
-    constantShieldDamage: 0
-    barrierDamageMitigation: 0
-    currentHealth: 0
-    rechargeTimer: 0
-  - segmentName: Health
-    maxHealth: 150
-    segmentType: 3
-    startActive: 1
-    carryDamageToNextSegment: 0
-    canRecharge: 0
+    damageResetsSegment: 0
+    anyDamageResetsSegment: 0
     rechargeRate: 0
     rechargeDelay: 0
     armourDamageReduction: 0
     minimumArmourDamage: 0
     constantShieldDamage: 0
-    barrierDamageMitigation: 0.9
+    barrierDamageMitigation: 0
+    currentHealth: 0
+    rechargeTimer: 0
+  - segmentName: Health
+    maxHealth: 0
+    startActive: 0
+    carryDamageToNextSegment: 0
+    segmentAttributes: 
+    canRecharge: 0
+    damageResetsSegment: 0
+    anyDamageResetsSegment: 0
+    rechargeRate: 0
+    rechargeDelay: 0
+    armourDamageReduction: 0
+    minimumArmourDamage: 0
+    constantShieldDamage: 0
+    barrierDamageMitigation: 0
     currentHealth: 0
     rechargeTimer: 0
 --- !u!4 &2095509122
