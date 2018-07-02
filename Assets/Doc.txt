@@ -1,0 +1,6 @@
+Public Methods:
+	applyDamage(float damage)
+	applyDamage(float damage, bool ignoreModifiers)
+	applyBonusDamage(float damage, float bonusDamage, SegmentType type, bool ignoreModifiers)
+	applyBonusDamage(float damage, float bonusDamage, string tag, bool ignoreModifiers)
+	applyBonusDamage(float damage, float bonusDamage, string[] tags, bool ignoreModifiers)

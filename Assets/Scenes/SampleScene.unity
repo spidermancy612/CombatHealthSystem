@@ -281,10 +281,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   healthSegmentArray:
   - segmentName: Shield
-    maxHealth: 0
+    maxHealth: 999
     startActive: 0
     carryDamageToNextSegment: 0
-    segmentAttributes: 00000000000000000000000000000000
+    carryHealingToNextSegment: 0
+    segmentType: 0
+    specialTags: []
     canRecharge: 0
     damageResetsSegment: 0
     anyDamageResetsSegment: 0
@@ -300,7 +302,27 @@ MonoBehaviour:
     maxHealth: 0
     startActive: 0
     carryDamageToNextSegment: 0
-    segmentAttributes: 
+    carryHealingToNextSegment: 0
+    segmentType: 0
+    specialTags: []
+    canRecharge: 0
+    damageResetsSegment: 0
+    anyDamageResetsSegment: 0
+    rechargeRate: 0
+    rechargeDelay: 0
+    armourDamageReduction: 0
+    minimumArmourDamage: 0
+    constantShieldDamage: 0
+    barrierDamageMitigation: 0
+    currentHealth: 0
+    rechargeTimer: 0
+  - segmentName: Health
+    maxHealth: 0
+    startActive: 0
+    carryDamageToNextSegment: 0
+    carryHealingToNextSegment: 0
+    segmentType: 0
+    specialTags: []
     canRecharge: 0
     damageResetsSegment: 0
     anyDamageResetsSegment: 0

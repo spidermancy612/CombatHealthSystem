@@ -8,13 +8,8 @@ public class Health : MonoBehaviour {
 
     public HealthSegement[] healthSegmentArray;
 
-    //public int numberOfSegments;
-
     private int currentSegment;
     private int currentRechargeSegment;
-
-    [HideInInspector]
-    //public const int SEGMENT_ATTRIBUTE_COUNT = 3;
 
     private bool canRechargeSegment;
 
@@ -22,10 +17,6 @@ public class Health : MonoBehaviour {
     //Called at start of scene before the first frame and whenever the object is re-enabled
     private void Awake()
     {
-        //Log warnings and errors
-        errorChecking();
-        warningChecking();
-
         canRechargeSegment = false;
         for (int i = 0; i < healthSegmentArray.Length; i++)
         {
@@ -40,25 +31,6 @@ public class Health : MonoBehaviour {
             }
         }
     }
-
-    #region Log Checking
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    //
-    private void errorChecking()
-    {
-        if (healthSegmentArray.Length == 0)
-        {
-            Debug.LogError("DEVELOPER ERROR - Array Length - Array for health segments has no elements and will result in this script not working :: " + gameObject.name);
-        }
-    }
-
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    //
-    private void warningChecking()
-    {
-
-    }
-    #endregion
 
     #region Update States and Values
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -157,39 +129,54 @@ public class Health : MonoBehaviour {
     }
     #endregion
 
-    #region Apply Damage (External Call)
+    #region Apply Damage
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     //Called by external scripts to apply damage to this object based on the segment type
     public void applyDamage(float damage)
     {
         updateRechargeTimers();
 
-        //Iterate through all the attributes 
-        for (int i = 0; i < healthSegmentArray[currentSegment].segmentAttributes.Length; i++)
+        switch (healthSegmentArray[currentSegment].segmentType)
         {
-            switch (healthSegmentArray[currentSegment].segmentAttributes[i])
-            {
-                case SegmentAttribute.NONE:
-                    break;
-                case SegmentAttribute.shield:
-                    damage = shieldDamageModifier();
-                    break;
-                case SegmentAttribute.armour:
-                    damage = armourDamageModifier(damage);
-                    break;
-                case SegmentAttribute.barrier:
-                    damage = barrierDamageModifier(damage);
-                    break;
-            }
+            case SegmentType.health:
+                applyDamageToSegment(damage, false);
+                break;
+            case SegmentType.shield:
+                damage = shieldDamageModifier();
+                applyDamageToSegment(damage, false);
+                break;
+            case SegmentType.armour:
+                damage = armourDamageModifier(damage);
+                applyDamageToSegment(damage, false);
+                break;
+            case SegmentType.barrier:
+                damage = barrierDamageModifier(damage);
+                applyDamageToSegment(damage, false);
+                break;
+        }
+        
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    //Called to apply damage to the segments with the additional option to avoid segment damage modifiers
+    public void applyDamage (float damage, bool ignoreMofiers)
+    {
+        if (ignoreMofiers)
+        {
+            applyDamageToSegment(damage, true);
+        }
+        else
+        {
+            applyDamage(damage);
         }
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     //Applies damage directly to the segment without any modification
-    private void applyHealthDamage(float damage)
+    private void applyDamageToSegment(float damage, bool ignoreModifers)
     {
         //If we have more health than the damage we're taking we directly apply it OR if this is the base health segment
-        if (damage <= healthSegmentArray[currentSegment].currentHealth || currentSegment == 0)
+        if (damage <= healthSegmentArray[currentSegment].currentHealth || currentSegment == healthSegmentArray.Length - 1)
         {
             healthSegmentArray[currentSegment].currentHealth -= damage;
         }
@@ -207,7 +194,7 @@ public class Health : MonoBehaviour {
                 updateTopHealthSegment();
 
                 //Apply the damage on the new segment
-                applyDamage(damage);
+                applyDamage(damage, ignoreModifers);
             }
             //Otherwise all damage is applied here
             else
@@ -219,7 +206,8 @@ public class Health : MonoBehaviour {
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    //Applies damage to the segment reduced by the armour value
+    //Returns the damage modified to be reduced by a set value or returns the minimum damage for an armour layer if the 
+    //damage falls below the min threshold
     private float armourDamageModifier(float damage)
     {
         //Modify damage for armour
@@ -233,68 +221,173 @@ public class Health : MonoBehaviour {
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    //Applies a constant amount of damage to the segment
+    //Returns the constant damage a shield will take on each attack
     private float shieldDamageModifier()
     {
         return healthSegmentArray[currentSegment].constantShieldDamage;
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    //Applies damage to the segment as a percentage of the original amount
+    //Returns damage as a percentage of the original paramter 
     private float barrierDamageModifier(float damage)
     {
         return damage * healthSegmentArray[currentSegment].barrierDamageMitigation;
     }
     #endregion
 
-    #region Apply Damage - Special Calls (External Calls)
+    #region Apply Damage - Special Calls
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    //Used to apply bonus damage to a segment if the provided attribute matches
-    public void applyBonusDamage (float baseDamage, float bonusDamage, SegmentAttribute attribute)
+    //Applies additional damage if the current segment matches the provided paramter
+    public void applyBonusDamage(float baseDamage, float bonusDamage, SegmentType type, bool ignoreModifiers)
     {
-        if (segmentHasAttribute(attribute))
-        {
-            applyDamage(baseDamage + bonusDamage);
-        }
-        else
-        {
-            applyDamage(baseDamage);
-        }
-    }
-
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    //Used to apply bonus damage to a segment if one of the provided attributes matches
-    public void applyBonusDamage(float baseDamage, float bonusDamage, SegmentAttribute attribute1, SegmentAttribute attribute2)
-    {
-        if (segmentHasAttribute(attribute1) || segmentHasAttribute(attribute2))
-        {
-            applyDamage(baseDamage + bonusDamage);
-        }
-        else
-        {
-            applyDamage(baseDamage);
-        }
-    }
-
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    //Method returns if the provided attribute is selected on the current health segment for applying damage
-    private bool segmentHasAttribute (SegmentAttribute attribute)
-    {
-        //Update current top health segment
+        //Make sure we're on the right segment
         updateTopHealthSegment();
 
-        //Check each health segment attribute for the desired attribute
-        for (int i = 0; i < healthSegmentArray[currentSegment].segmentAttributes.Length; i++)
+        //Check if we match with the provided segment type
+        if (healthSegmentArray[currentSegment].segmentType == type)
         {
-            //If we find a match return true
-            if (healthSegmentArray[currentRechargeSegment].segmentAttributes[i] == attribute)
+            //Check if we are ignoring the segment damage modifiers
+            if (ignoreModifiers) applyDamageToSegment(baseDamage + bonusDamage, true);
+            else applyDamage(baseDamage + bonusDamage);
+        }
+        //Otherwise we aren't applying bonus damage
+        else
+        {
+            //Check if we're ignoring the segment damage modifiers
+            if (ignoreModifiers) applyDamageToSegment(baseDamage, true);
+            else applyDamage(baseDamage);
+        }
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    //Applies additional damage if the current segment contains the provided string paramter
+    public void applyBonusDamage (float baseDamage, float bonusDamage, string tag, bool ignoreModifiers)
+    {
+        updateTopHealthSegment();
+
+        //Check for the array not existing for some reason
+        if (healthSegmentArray[currentSegment].specialTags == null)
+        {
+            Debug.LogError("ASSET WARNING - Null Array - Tags array for " + gameObject.name + " has no tags array attached and will prevent any tag calls from being made! Please contact creator if you see this message.");
+            return;
+        }
+        //Check if they've called for a tag to be used but no tag is set
+        if (healthSegmentArray[currentSegment].specialTags[0] == "")
+        {
+            Debug.LogWarning("DEVELOPER WARNING - Bad Method Call - Attempted to call applyBonusDamage on " + gameObject.name + " using a tag when no tags have been set for the associated health segment." +
+                "Please check segment #" + currentSegment.ToString() + " for tags to correct this warning.");
+            return;
+        }
+
+        //Check each string in the tags array
+        foreach (string t in healthSegmentArray[currentRechargeSegment].specialTags)
+        {
+            //If we find a match then apply the bonus damage and return
+            if (t.Equals(tag))
             {
-                return true;
+                if (ignoreModifiers) applyDamageToSegment(baseDamage + bonusDamage, true);
+                else applyDamage(baseDamage + bonusDamage);
+                return;
             }
         }
 
-        //Base case if no matches are found, return false
-        return false;
+        //We didn't find the tag in the array, apply only base damage
+        if (ignoreModifiers) applyDamageToSegment(baseDamage, true);
+        else applyDamage(baseDamage);
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    //Applies additional damage if the current segment tags contains any of the provided string paramters
+    public void applyBonusDamage(float baseDamage, float bonusDamage, string[] tagArray, bool ignoreModifiers)
+    {
+        updateTopHealthSegment();
+
+        //Check for the array not existing for some reason
+        if (healthSegmentArray[currentSegment].specialTags == null)
+        {
+            Debug.LogError("ASSET WARNING - Null Array - Tags array for " + gameObject.name + " has no tags array attached and will prevent any tag calls from being made! Please contact creator if you see this message.");
+            return;
+        }
+        //Check if they've called for a tag to be used but no tag is set
+        if (healthSegmentArray[currentSegment].specialTags[0] == "")
+        {
+            Debug.LogWarning("DEVELOPER WARNING - Bad Method Call - Attempted to call applyBonusDamage on " + gameObject.name + " using a tag when no tags have been set for the associated health segment." +
+                "Please check segment #" + currentSegment.ToString() + " for tags to correct this warning.");
+            return;
+        }
+
+        //Check each string in the tags array
+        foreach (string st in healthSegmentArray[currentRechargeSegment].specialTags)
+        {
+            foreach (string t in tagArray)
+            {
+                if (st.Equals(t))
+                {
+                    if (ignoreModifiers) applyDamageToSegment(baseDamage + bonusDamage, true);
+                    else applyDamage(baseDamage + bonusDamage);
+                    return;
+                }
+            }
+        }
+
+        //We didn't find the tag in the array, apply only base damage
+        if (ignoreModifiers) applyDamageToSegment(baseDamage, true);
+        else applyDamage(baseDamage);
+    }
+    #endregion
+
+    #region ApplyHealth 
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    //Public method to be called when adding health to a segment. Will scan from lowest to highest segment to add health 
+    //to the first segment matching the SegmentType paramter
+    public void applyHealth (float health, SegmentType type)
+    {
+        addHealth(health, findSegmentForAddingHealth(type), type);
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    //Adds health to the segment at the provided index and handles health overflow to other segments when needed
+    private void addHealth (float health, int index, SegmentType type)
+    {
+        if (index == -1) return;
+
+        //If we have more health than we can heal on this segment
+        if (health + healthSegmentArray[index].currentHealth > healthSegmentArray[index].maxHealth)
+        {
+            //Save the overflow of health and set current health to max
+            health -= healthSegmentArray[index].maxHealth;
+            healthSegmentArray[index].currentHealth = healthSegmentArray[index].maxHealth;
+
+            //If carry over is enabled we search for the next matching segment and provide it the overflow health
+            if (healthSegmentArray[index].carryHealingToNextSegment)
+            {
+                applyHealth(health, type);
+            }
+        }
+        //Otherwise we can normally apply health to this segment
+        else
+        {
+            healthSegmentArray[index].currentHealth += health;
+        }
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    //Scanes through all segments from the lowest to highest level (greatest index to lowest) and returns the segment index
+    //if the segment is missing health and matches the SegmentType provided
+    private int findSegmentForAddingHealth (SegmentType type)
+    {
+        //Check through all segment from the bottom up
+        for(int i = healthSegmentArray.Length - 1; i >= 0; i--)
+        {
+            //If the SegmentTypes match and the segment is missing health, return the segment index
+            if (type == healthSegmentArray[i].segmentType && healthSegmentArray[i].currentHealth < healthSegmentArray[i].maxHealth)
+            {
+                return i;
+            }
+        }
+
+        //We never found a match so return -1
+        return -1;
     }
     #endregion
 
@@ -328,6 +421,14 @@ public class Health : MonoBehaviour {
 
         return healthSegmentArray[segmentNumber];
     }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    //Returns the HealthSegment currently being modified when applying damage
+    public HealthSegement getCurrentHealthSegment ()
+    {
+        updateTopHealthSegment();
+        return healthSegmentArray[currentSegment];
+    }
     #endregion
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -345,32 +446,26 @@ public struct HealthSegement
     public string segmentName;
 #endif
 
-    [Header("Start Options")]
     public float maxHealth;
     public bool startActive;   
-    public bool carryDamageToNextSegment;
-    [Space(3)]
-    public SegmentAttribute[] segmentAttributes;
 
-    [Space(5)]
-    [Header("Recharge Options")]
+    public bool carryDamageToNextSegment;
+    public bool carryHealingToNextSegment;
+
+    public SegmentType segmentType;
+    public string[] specialTags;
+
     public bool canRecharge;
     public bool damageResetsSegment;
     public bool anyDamageResetsSegment;
     public float rechargeRate;  
     public float rechargeDelay;
 
-    [Space(5)]
-    [Header("Armour Options")]
     public float armourDamageReduction; 
     public float minimumArmourDamage;   
 
-    [Space(5)]
-    [Header("Shield Options")]
     public float constantShieldDamage; 
 
-    [Space(5)]
-    [Header("Barrier Options")]
     public float barrierDamageMitigation;  
 
 
@@ -379,4 +474,4 @@ public struct HealthSegement
 
 }
 
-public enum SegmentAttribute { armour, shield, barrier, NONE }
+public enum SegmentType { health, armour, shield, barrier }
