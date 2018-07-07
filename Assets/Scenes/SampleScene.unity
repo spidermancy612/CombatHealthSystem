@@ -259,8 +259,8 @@ GameObject:
   serializedVersion: 5
   m_Component:
   - component: {fileID: 2095509122}
-  - component: {fileID: 2095509121}
   - component: {fileID: 2095509123}
+  - component: {fileID: 2095509121}
   m_Layer: 0
   m_Name: Test Unit
   m_TagString: Untagged
@@ -281,11 +281,32 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   healthSegmentArray:
   - segmentName: Shield
-    maxHealth: 999
+    maxHealth: 100
     startActive: 0
     carryDamageToNextSegment: 0
     carryHealingToNextSegment: 0
-    segmentType: 0
+    segmentType: 1
+    specialTags:
+    - 
+    - 
+    - 
+    canRecharge: 0
+    damageResetsSegment: 0
+    anyDamageResetsSegment: 0
+    rechargeRate: 0
+    rechargeDelay: 0
+    armourDamageReduction: 0
+    minimumArmourDamage: 0
+    constantShieldDamage: 0
+    barrierDamageMitigation: 0
+    currentHealth: 0
+    rechargeTimer: 0
+  - segmentName: Shield
+    maxHealth: 125
+    startActive: 0
+    carryDamageToNextSegment: 0
+    carryHealingToNextSegment: 0
+    segmentType: 3
     specialTags: []
     canRecharge: 0
     damageResetsSegment: 0
@@ -298,30 +319,12 @@ MonoBehaviour:
     barrierDamageMitigation: 0
     currentHealth: 0
     rechargeTimer: 0
-  - segmentName: Health
-    maxHealth: 0
-    startActive: 0
+  - segmentName: Shield
+    maxHealth: 125
+    startActive: 1
     carryDamageToNextSegment: 0
     carryHealingToNextSegment: 0
-    segmentType: 0
-    specialTags: []
-    canRecharge: 0
-    damageResetsSegment: 0
-    anyDamageResetsSegment: 0
-    rechargeRate: 0
-    rechargeDelay: 0
-    armourDamageReduction: 0
-    minimumArmourDamage: 0
-    constantShieldDamage: 0
-    barrierDamageMitigation: 0
-    currentHealth: 0
-    rechargeTimer: 0
-  - segmentName: Health
-    maxHealth: 0
-    startActive: 0
-    carryDamageToNextSegment: 0
-    carryHealingToNextSegment: 0
-    segmentType: 0
+    segmentType: 2
     specialTags: []
     canRecharge: 0
     damageResetsSegment: 0
