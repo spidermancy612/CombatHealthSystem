@@ -285,14 +285,12 @@ MonoBehaviour:
     startActive: 0
     carryDamageToNextSegment: 0
     carryHealingToNextSegment: 0
-    segmentType: 1
+    segmentType: 0
     specialTags:
     - 
     - 
     - 
     canRecharge: 0
-    damageResetsSegment: 0
-    anyDamageResetsSegment: 0
     rechargeRate: 0
     rechargeDelay: 0
     armourDamageReduction: 0
@@ -301,42 +299,8 @@ MonoBehaviour:
     barrierDamageMitigation: 0
     currentHealth: 0
     rechargeTimer: 0
-  - segmentName: Shield
-    maxHealth: 125
-    startActive: 0
-    carryDamageToNextSegment: 0
-    carryHealingToNextSegment: 0
-    segmentType: 3
-    specialTags: []
-    canRecharge: 0
-    damageResetsSegment: 0
-    anyDamageResetsSegment: 0
-    rechargeRate: 0
-    rechargeDelay: 0
-    armourDamageReduction: 0
-    minimumArmourDamage: 0
-    constantShieldDamage: 0
-    barrierDamageMitigation: 0
-    currentHealth: 0
-    rechargeTimer: 0
-  - segmentName: Shield
-    maxHealth: 125
-    startActive: 1
-    carryDamageToNextSegment: 0
-    carryHealingToNextSegment: 0
-    segmentType: 2
-    specialTags: []
-    canRecharge: 0
-    damageResetsSegment: 0
-    anyDamageResetsSegment: 0
-    rechargeRate: 0
-    rechargeDelay: 0
-    armourDamageReduction: 0
-    minimumArmourDamage: 0
-    constantShieldDamage: 0
-    barrierDamageMitigation: 0
-    currentHealth: 0
-    rechargeTimer: 0
+  universalRecharge: 0
+  universalDamageReset: 0
 --- !u!4 &2095509122
 Transform:
   m_ObjectHideFlags: 0

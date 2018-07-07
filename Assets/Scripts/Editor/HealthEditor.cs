@@ -40,6 +40,12 @@ public class HealthEditor : Editor {
         incrementButtons();
         healthSegmentArray.arraySize = numberOfSegments;
 
+        EditorGUILayout.PropertyField(serializedObject.FindProperty("universalRecharge"), new GUIContent("Universal Recharge",
+            "When enabled all segments will only recharge in order of layer (lowest to highest). Otherwise all segments can recharge independently"));
+        EditorGUILayout.PropertyField(serializedObject.FindProperty("universalDamageReset"), new GUIContent("Universal Damage Reset",
+            "When enabled all segments will reset their recharge. Otherwise rechrage resets will only occur when specific segments take damage"));
+
+
         for (int i = 0; i < numberOfSegments; i++)
         {
             GUILayout.Label("Segment #" + i.ToString(), EditorStyles.boldLabel);
@@ -113,10 +119,6 @@ public class HealthEditor : Editor {
 
         if (segment.FindPropertyRelative("canRecharge").boolValue)
         {
-            EditorGUILayout.PropertyField(segment.FindPropertyRelative("damageResetsSegment"), new GUIContent("Damage Resets Recharge",
-            "When enabled the recharge timer will reset whenever this segment takes damage"));
-            EditorGUILayout.PropertyField(segment.FindPropertyRelative("anyDamageResetsSegment"), new GUIContent("Any Damage Resets Recharge",
-                "When enabled the recharge timer will reset whenever any segment takes damage"));
             EditorGUILayout.PropertyField(segment.FindPropertyRelative("rechargeRate"), new GUIContent("Recharge Rate",
                 "The speed at which the segment will recharge health after the timer expires"));
             EditorGUILayout.PropertyField(segment.FindPropertyRelative("rechargeDelay"), new GUIContent("Recharge Delay",

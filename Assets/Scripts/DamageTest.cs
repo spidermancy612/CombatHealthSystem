@@ -16,7 +16,7 @@ public class DamageTest : MonoBehaviour {
 	void Update () {
 		if (Input.GetKeyDown(KeyCode.Space))
         {
-            health.applyDamage(damage);
+            //health.applyDamage(damage);
             //Debug.Log("Dealing damage");
         }
 	}

@@ -3,7 +3,10 @@ using System.Collections.Generic;
 using UnityEngine;
 using System;
 
-
+/// <summary>
+/// Class handles interfacing with the Unity engine. Uses associated classed to track and modify data as it pertains to the user health based 
+/// parameters provided by other classes when making calls to public methods in this class. Acts as encapsulator for health functionality.
+/// </summary>
 public class Health : MonoBehaviour {
 
     public HealthSegement[] healthSegmentArray;
@@ -13,10 +16,14 @@ public class Health : MonoBehaviour {
 
     private bool canRechargeSegment;
 
+    public bool universalRecharge;
+    public bool universalDamageReset;
+
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     //Called at start of scene before the first frame and whenever the object is re-enabled
     private void Awake()
-    {
+    { 
+
         canRechargeSegment = false;
         for (int i = 0; i < healthSegmentArray.Length; i++)
         {
@@ -31,7 +38,7 @@ public class Health : MonoBehaviour {
             }
         }
     }
-
+    /*
     #region Update States and Values
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     //Called every frame while the component is active
@@ -430,7 +437,7 @@ public class Health : MonoBehaviour {
         return healthSegmentArray[currentSegment];
     }
     #endregion
-
+    */
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     //Called for when the object dies - runs out of health on lowest layer 
     private void deathEvent ()
@@ -439,6 +446,10 @@ public class Health : MonoBehaviour {
     } 
 }
 
+/// <summary>
+/// Struct used for holding all relevant data on a health segment. Structs used for access and modification speeds to cope with the likeihood that
+/// developers will be using this across a large number of objects and/or making modifications frequently. (Damage over time effects for example)
+/// </summary>
 [System.Serializable]
 public struct HealthSegement
 {
@@ -456,8 +467,6 @@ public struct HealthSegement
     public string[] specialTags;
 
     public bool canRecharge;
-    public bool damageResetsSegment;
-    public bool anyDamageResetsSegment;
     public float rechargeRate;  
     public float rechargeDelay;
 
@@ -474,4 +483,23 @@ public struct HealthSegement
 
 }
 
+/// <summary>
+/// Enum used for tracking what type of segment the HealthSegment is. Housed inside the HealthSegment Struct and for checks against the state of the 
+/// enum inside the struct
+/// </summary>
 public enum SegmentType { health, armour, shield, barrier }
+
+/// <summary>
+/// Class used to handle all work done in relation to recharging all segments
+/// </summary>
+public class SegmentRecharge {
+
+    private bool universalRecharge;
+    private bool universalReset;
+
+    public SegmentRecharge(HealthSegement[] segmentArray, bool universalRecharge, bool universalReset)
+    {
+        this.universalRecharge = universalRecharge;
+        this.universalReset = universalReset;
+    }    
+}
