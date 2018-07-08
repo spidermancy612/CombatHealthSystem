@@ -48,7 +48,7 @@ public class HealthEditor : Editor {
 
         for (int i = 0; i < numberOfSegments; i++)
         {
-            GUILayout.Label("Segment #" + i.ToString(), EditorStyles.boldLabel);
+            GUILayout.Label("Segment #" + (i + 1).ToString(), EditorStyles.boldLabel);
             segment = healthSegmentArray.GetArrayElementAtIndex(i);
 
             drawHealthOptions(); GUILayout.Space(2);
@@ -134,8 +134,13 @@ public class HealthEditor : Editor {
                 "Will any spillover damage be applied to the next segment?"));
         EditorGUILayout.PropertyField(segment.FindPropertyRelative("carryHealingToNextSegment"), new GUIContent("Carry Healing",
             "Will any spillover health be applied to the next segment?"));
-        EditorGUILayout.PropertyField(segment.FindPropertyRelative("specialTags"), new GUIContent("Tags",
-            "Tags/Strings used to identify this segment"), true);
+        EditorGUILayout.PropertyField(segment.FindPropertyRelative("useTags"), new GUIContent("Use Tags",
+            "Will this segment use any tags for special damage application or identification?"));
+        if (segment.FindPropertyRelative("useTags").boolValue)
+        {
+            EditorGUILayout.PropertyField(segment.FindPropertyRelative("specialTags"), new GUIContent("Tags",
+                        "Tags/Strings used to identify this segment"), true);
+        }   
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////

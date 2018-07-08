@@ -286,10 +286,8 @@ MonoBehaviour:
     carryDamageToNextSegment: 0
     carryHealingToNextSegment: 0
     segmentType: 0
-    specialTags:
-    - 
-    - 
-    - 
+    useTags: 1
+    specialTags: []
     canRecharge: 0
     rechargeRate: 0
     rechargeDelay: 0
