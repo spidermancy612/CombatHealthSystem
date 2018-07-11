@@ -280,13 +280,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   healthSegmentArray:
-  - segmentName: Shield
-    maxHealth: 100
+  - maxHealth: 0
     startActive: 0
     carryDamageToNextSegment: 0
     carryHealingToNextSegment: 0
     segmentType: 0
-    useTags: 1
+    useTags: 0
     specialTags: []
     canRecharge: 0
     rechargeRate: 0
@@ -297,8 +296,8 @@ MonoBehaviour:
     barrierDamageMitigation: 0
     currentHealth: 0
     rechargeTimer: 0
-  universalRecharge: 0
-  universalDamageReset: 0
+  universalRecharge: 1
+  universalDamageReset: 1
 --- !u!4 &2095509122
 Transform:
   m_ObjectHideFlags: 0

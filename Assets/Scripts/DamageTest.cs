@@ -14,10 +14,8 @@ public class DamageTest : MonoBehaviour {
 	
 	// Update is called once per frame
 	void Update () {
-		if (Input.GetKeyDown(KeyCode.Space))
-        {
-            //health.applyDamage(damage);
-            //Debug.Log("Dealing damage");
-        }
+		if (Input.GetKeyDown(KeyCode.Q)) health.applyDamage(damage);
+
+        if (Input.GetKeyDown(KeyCode.W)) health.applyDamage(damage, true);
 	}
 }

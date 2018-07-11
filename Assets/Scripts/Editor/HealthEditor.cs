@@ -3,50 +3,44 @@ using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 
+[System.Serializable]
 [CustomEditor(typeof(Health))]
 public class HealthEditor : Editor {
 
     SerializedProperty healthSegmentArray;
     SerializedProperty segment;
 
+    private Health health;
+
+    [SerializeField]
     private int numberOfSegments;
+
+    private count c;
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////
     //
     public override void OnInspectorGUI()
     {
-
-
-        /*  EXAMPLE
         serializedObject.Update();
-        Health h = (Health)target;
-        SerializedProperty a = serializedObject.FindProperty("healthSegmentArray");
-        EditorGUI.BeginChangeCheck();
-        a.arraySize = 3;
-        SerializedProperty t = a.GetArrayElementAtIndex(0);
-        t.FindPropertyRelative("maxHealth").floatValue = 999;
-        EditorGUILayout.PropertyField(a, true);   //Shows in inspector
-        if (EditorGUI.EndChangeCheck())
-        {
-            serializedObject.ApplyModifiedProperties();
-        }
-        */
+
+        if (c == null) c = new count();
+        if (c.number == 0) c.number = 1;
+
         GUILayout.Label("Health Segments");
-
-        serializedObject.Update();
-        Health health = (Health)target;
+ 
+        health = (Health)target;
         healthSegmentArray = serializedObject.FindProperty("healthSegmentArray");
 
         incrementButtons();
-        healthSegmentArray.arraySize = numberOfSegments;
+        healthSegmentArray.arraySize = c.number;
 
         EditorGUILayout.PropertyField(serializedObject.FindProperty("universalRecharge"), new GUIContent("Universal Recharge",
             "When enabled all segments will only recharge in order of layer (lowest to highest). Otherwise all segments can recharge independently"));
         EditorGUILayout.PropertyField(serializedObject.FindProperty("universalDamageReset"), new GUIContent("Universal Damage Reset",
-            "When enabled all segments will reset their recharge. Otherwise rechrage resets will only occur when specific segments take damage"));
+            "When enabled all segments will reset their recharge. Otherwise recharge resets will only occur when specific segments take damage"));
 
 
-        for (int i = 0; i < numberOfSegments; i++)
+        for (int i = 0; i < c.number; i++)
         {
             GUILayout.Label("Segment #" + (i + 1).ToString(), EditorStyles.boldLabel);
             segment = healthSegmentArray.GetArrayElementAtIndex(i);
@@ -74,9 +68,9 @@ public class HealthEditor : Editor {
             }
 
             GUILayout.Space(10);
-
-            serializedObject.ApplyModifiedProperties();
         }
+        if (GUI.changed) EditorUtility.SetDirty(health);
+        serializedObject.ApplyModifiedProperties();
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -86,17 +80,17 @@ public class HealthEditor : Editor {
         EditorGUILayout.BeginHorizontal();
         if (GUILayout.Button("Add"))
         {
-            numberOfSegments++;
+            c.number++;
         }
         if (GUILayout.Button("Remove"))
         {
-            if (numberOfSegments > 1)
+            if (c.number > 1)
             {
-                numberOfSegments--;
+                c.number--;
             }
         }
 
-        if (numberOfSegments < 1) numberOfSegments = 1;
+        //if (numberOfSegments < 1) numberOfSegments = 1;
         EditorGUILayout.EndHorizontal();
     }
 
@@ -175,4 +169,10 @@ public class HealthEditor : Editor {
         EditorGUILayout.PropertyField(segment.FindPropertyRelative("barrierDamageMitigation"), new GUIContent("Barrier Mitigation",
             "Percentage of the original damage provided the segment will take. Recommended: 0.0 - 1.0"));
     }
+}
+
+[System.Serializable]
+public class count
+{
+    public int number;
 }
