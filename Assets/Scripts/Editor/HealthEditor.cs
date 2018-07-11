@@ -9,30 +9,27 @@ public class HealthEditor : Editor {
 
     SerializedProperty healthSegmentArray;
     SerializedProperty segment;
+    SerializedProperty segmentArraySize;
 
     private Health health;
 
     [SerializeField]
     private int numberOfSegments;
 
-    private count c;
-
     /////////////////////////////////////////////////////////////////////////////////////////////////////////
     //
     public override void OnInspectorGUI()
     {
-        serializedObject.Update();
+        serializedObject.Update();    
 
-        if (c == null) c = new count();
-        if (c.number == 0) c.number = 1;
-
-        GUILayout.Label("Health Segments");
- 
         health = (Health)target;
         healthSegmentArray = serializedObject.FindProperty("healthSegmentArray");
+        segmentArraySize = serializedObject.FindProperty("arraySize");
+
+        GUILayout.Label("Health Segments");
 
         incrementButtons();
-        healthSegmentArray.arraySize = c.number;
+        healthSegmentArray.arraySize = segmentArraySize.intValue;
 
         EditorGUILayout.PropertyField(serializedObject.FindProperty("universalRecharge"), new GUIContent("Universal Recharge",
             "When enabled all segments will only recharge in order of layer (lowest to highest). Otherwise all segments can recharge independently"));
@@ -40,7 +37,7 @@ public class HealthEditor : Editor {
             "When enabled all segments will reset their recharge. Otherwise recharge resets will only occur when specific segments take damage"));
 
 
-        for (int i = 0; i < c.number; i++)
+        for (int i = 0; i < segmentArraySize.intValue; i++)
         {
             GUILayout.Label("Segment #" + (i + 1).ToString(), EditorStyles.boldLabel);
             segment = healthSegmentArray.GetArrayElementAtIndex(i);
@@ -80,17 +77,15 @@ public class HealthEditor : Editor {
         EditorGUILayout.BeginHorizontal();
         if (GUILayout.Button("Add"))
         {
-            c.number++;
+            segmentArraySize.intValue++;
         }
         if (GUILayout.Button("Remove"))
         {
-            if (c.number > 1)
-            {
-                c.number--;
-            }
+            segmentArraySize.intValue--;
         }
 
-        //if (numberOfSegments < 1) numberOfSegments = 1;
+        if (segmentArraySize.intValue < 1) segmentArraySize.intValue = 1;
+
         EditorGUILayout.EndHorizontal();
     }
 
@@ -172,7 +167,7 @@ public class HealthEditor : Editor {
 }
 
 [System.Serializable]
-public class count
+public class arraySizeTracker
 {
-    public int number;
+    public int size;
 }

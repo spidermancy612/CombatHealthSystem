@@ -19,6 +19,8 @@ public class Health : MonoBehaviour {
     public bool universalRecharge;
     public bool universalDamageReset;
 
+    public int arraySize;
+
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     //Called at start of scene before the first frame and whenever the object is re-enabled
     private void Awake()
