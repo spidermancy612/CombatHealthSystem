@@ -259,8 +259,8 @@ GameObject:
   serializedVersion: 5
   m_Component:
   - component: {fileID: 2095509122}
-  - component: {fileID: 2095509123}
   - component: {fileID: 2095509121}
+  - component: {fileID: 2095509123}
   m_Layer: 0
   m_Name: Test Unit
   m_TagString: Untagged
@@ -280,24 +280,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   healthSegmentArray:
-  - maxHealth: 0
-    startActive: 0
-    carryDamageToNextSegment: 0
-    carryHealingToNextSegment: 0
-    segmentType: 0
-    useTags: 0
-    specialTags: []
-    canRecharge: 0
-    rechargeRate: 0
-    rechargeDelay: 0
-    armourDamageReduction: 0
-    minimumArmourDamage: 0
-    constantShieldDamage: 0
-    barrierDamageMitigation: 0
-    currentHealth: 0
-    rechargeTimer: 0
-  - maxHealth: 0
-    startActive: 0
+  - maxHealth: 100
+    startActive: 1
     carryDamageToNextSegment: 0
     carryHealingToNextSegment: 0
     segmentType: 0
@@ -313,8 +297,8 @@ MonoBehaviour:
     currentHealth: 0
     rechargeTimer: 0
   universalRecharge: 1
-  universalDamageReset: 1
-  arraySize: 2
+  universalDamageReset: 0
+  arraySize: 1
 --- !u!4 &2095509122
 Transform:
   m_ObjectHideFlags: 0
@@ -336,7 +320,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 2095509120}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b057cfd9a7b41544dbdf1cb088b93aad, type: 3}
+  m_Script: {fileID: 11500000, guid: dea73cbf4f0c6854cb2f122e4cfb505b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  damage: 25
+  health: {fileID: 0}

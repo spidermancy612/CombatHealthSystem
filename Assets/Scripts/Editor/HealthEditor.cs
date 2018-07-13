@@ -4,14 +4,14 @@ using UnityEditor;
 using UnityEngine;
 
 [System.Serializable]
-[CustomEditor(typeof(Health))]
+[CustomEditor(typeof(HealthController))]
 public class HealthEditor : Editor {
 
     SerializedProperty healthSegmentArray;
     SerializedProperty segment;
     SerializedProperty segmentArraySize;
 
-    private Health health;
+    private HealthController health;
 
     [SerializeField]
     private int numberOfSegments;
@@ -22,7 +22,7 @@ public class HealthEditor : Editor {
     {
         serializedObject.Update();    
 
-        health = (Health)target;
+        health = (HealthController)target;
         healthSegmentArray = serializedObject.FindProperty("healthSegmentArray");
         segmentArraySize = serializedObject.FindProperty("arraySize");
 
