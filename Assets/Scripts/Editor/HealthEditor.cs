@@ -123,6 +123,8 @@ public class HealthEditor : Editor {
                 "Will any spillover damage be applied to the next segment?"));
         EditorGUILayout.PropertyField(segment.FindPropertyRelative("carryHealingToNextSegment"), new GUIContent("Carry Healing",
             "Will any spillover health be applied to the next segment?"));
+        EditorGUILayout.PropertyField(segment.FindPropertyRelative("isDisabled"), new GUIContent("Disabled",
+            "When enabled this segment will: have no health, take no damage, will not recharge, recieve no healing"));
         EditorGUILayout.PropertyField(segment.FindPropertyRelative("useTags"), new GUIContent("Use Tags",
             "Will this segment use any tags for special damage application or identification?"));
         if (segment.FindPropertyRelative("useTags").boolValue)

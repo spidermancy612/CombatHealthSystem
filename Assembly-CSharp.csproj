@@ -59,6 +59,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Assets\Scripts\Healer.cs" />
     <Compile Include="Assets\Scripts\HealthController.cs" />
     <None Include="Assets\Doc.txt" />
     <Reference Include="UnityEditor.StandardEvents">

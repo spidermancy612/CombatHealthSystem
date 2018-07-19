@@ -9,37 +9,51 @@ using System;
 /// </summary>
 public class HealthController : MonoBehaviour {
 
-    public HealthSegement[] healthSegmentArray;
+    public HealthSegement[] segmentArray;         // Array of Structs holding health segment data
 
-    private int currentSegment;
-    private int currentRechargeSegment;
+    private DamageControl   damageControl;
+    private HealingControl  healingControl;
+    private RechargeControl rechargeControl;
 
-    private bool canRechargeSomeSegment;
 
-    public bool universalRecharge;
-    public bool universalDamageReset;
 
-    public int arraySize;
+    private int currentSegment;                         // Current segment for applying damage
+    private int currentRechargeSegment;                 // Current segment for updating the recharge state
+
+    private bool canRechargeSomeSegment;                // Boolean set to false if no segments have recharge options - saves on segment checks for performance
+
+    public bool universalRecharge;                      // Inspector flag for allowing recharging of segments one at a time
+    public bool universalDamageReset;                   // Inspector flag for having any damage reset all segment recharge timers
+
+    public int arraySize;                               // Serialized save data for the custom inspector to track how many elements(segment) exist in the healthSegmentArray
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     //Called at start of scene before the first frame and whenever the object is re-enabled
     private void Awake()
-    { 
-
-        canRechargeSomeSegment = false;
-        for (int i = 0; i < healthSegmentArray.Length; i++)
+    {
+        //Iterate over all the segment for setting up any initial data
+        for (int i = 0; i < segmentArray.Length; i++)
         {
-            //Marks that recharge checks should occur
-            if (healthSegmentArray[i].canRecharge) canRechargeSomeSegment = true;
+            //Check if the segment will be starting with full or no health
+            if (segmentArray[i].startActive) { segmentArray[i].currentHealth = segmentArray[i].maxHealth; }
+            else { segmentArray[i].currentHealth = 0f; }
 
-            //Make sure all health starts max if option selected
-            if (healthSegmentArray[i].startActive)
-            {
-                healthSegmentArray[i].currentHealth = healthSegmentArray[i].maxHealth;
-                healthSegmentArray[i].rechargeTimer = healthSegmentArray[i].rechargeDelay;
-            }
+            //Make sure recharge timers start with the correct delay
+            segmentArray[i].rechargeTimer = segmentArray[i].rechargeDelay;
         }
+
+        //Initialize segment control classes
+        damageControl = new DamageControl(segmentArray, this);
+        healingControl = new HealingControl(segmentArray, this);
+        rechargeControl = new RechargeControl(segmentArray, this);
+
+        
     }
+
+
+
+
+
 
     #region Recharge Health Control
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -62,7 +76,7 @@ public class HealthController : MonoBehaviour {
             }
         }
 
-        if (healthSegmentArray[0].currentHealth <= 0) deathEvent();
+        if (segmentArray[0].currentHealth <= 0) deathEvent();
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -70,9 +84,9 @@ public class HealthController : MonoBehaviour {
     private void updateTopHealthSegment()
     {
         //Iterates from the highest segment down to apply damage in the correct order
-        for (int i = healthSegmentArray.Length - 1; i >= 0; i--)
+        for (int i = segmentArray.Length - 1; i >= 0; i--)
         {
-            if (healthSegmentArray[i].currentHealth > 0)
+            if (segmentArray[i].currentHealth > 0)
             {
                 currentSegment = i;
                 return;
@@ -88,9 +102,9 @@ public class HealthController : MonoBehaviour {
     //Called on Update to keep track of what segment should be recharging next
     private void updateTopRechargeSegment()
     {
-        for (int i = 0; i < healthSegmentArray.Length; i++)
+        for (int i = 0; i < segmentArray.Length; i++)
         {
-            if (healthSegmentArray[i].currentHealth < healthSegmentArray[i].maxHealth && healthSegmentArray[i].canRecharge)
+            if (segmentArray[i].currentHealth < segmentArray[i].maxHealth && segmentArray[i].canRecharge)
             {
                 currentRechargeSegment = i;
                 return;
@@ -108,23 +122,23 @@ public class HealthController : MonoBehaviour {
         if (canRechargeSomeSegment == false || currentRechargeSegment == -1) return;
 
         //We can recharge the current segment - mainly for error prevention
-        if ((healthSegmentArray[currentRechargeSegment].currentHealth < healthSegmentArray[currentRechargeSegment].maxHealth))
+        if ((segmentArray[currentRechargeSegment].currentHealth < segmentArray[currentRechargeSegment].maxHealth))
         {
             //We need to decriment the timer
-            if (healthSegmentArray[currentRechargeSegment].rechargeTimer > 0)
+            if (segmentArray[currentRechargeSegment].rechargeTimer > 0)
             {
-                healthSegmentArray[currentRechargeSegment].rechargeTimer -= Time.deltaTime;
+                segmentArray[currentRechargeSegment].rechargeTimer -= Time.deltaTime;
             }
             //Otherwise timer expired and we recharge health
             else
             {
-                healthSegmentArray[currentRechargeSegment].currentHealth += Time.deltaTime * healthSegmentArray[currentRechargeSegment].rechargeRate;
+                segmentArray[currentRechargeSegment].currentHealth += Time.deltaTime * segmentArray[currentRechargeSegment].rechargeRate;
             }
 
             //Make sure current health does not exceed max health
-            if (healthSegmentArray[currentRechargeSegment].currentHealth > healthSegmentArray[currentRechargeSegment].maxHealth)
+            if (segmentArray[currentRechargeSegment].currentHealth > segmentArray[currentRechargeSegment].maxHealth)
             {
-                healthSegmentArray[currentRechargeSegment].currentHealth = healthSegmentArray[currentRechargeSegment].maxHealth;
+                segmentArray[currentRechargeSegment].currentHealth = segmentArray[currentRechargeSegment].maxHealth;
             }
         }
     }
@@ -134,22 +148,22 @@ public class HealthController : MonoBehaviour {
     private void updateAllSegmentsForRecharge ()
     {
         //Update for all segments 
-        for (int i = 0; i < healthSegmentArray.Length; i++)
+        for (int i = 0; i < segmentArray.Length; i++)
         {
             //If the current segment can recharge and is missing health
-            if (healthSegmentArray[i].canRecharge && healthSegmentArray[i].currentHealth < healthSegmentArray[i].maxHealth)
+            if (segmentArray[i].canRecharge && segmentArray[i].currentHealth < segmentArray[i].maxHealth)
             {
                 //Check for timer still being active
-                if (healthSegmentArray[i].rechargeTimer > 0)
+                if (segmentArray[i].rechargeTimer > 0)
                 {
-                    healthSegmentArray[i].rechargeTimer -= Time.deltaTime;
+                    segmentArray[i].rechargeTimer -= Time.deltaTime;
                 }
                 //Otherwise we can increment health
                 else
                 {
-                    healthSegmentArray[i].currentHealth += healthSegmentArray[i].rechargeRate * Time.deltaTime;
+                    segmentArray[i].currentHealth += segmentArray[i].rechargeRate * Time.deltaTime;
                     //Make sure health doesn't overflow max specified amount
-                    if (healthSegmentArray[i].currentHealth > healthSegmentArray[i].maxHealth) healthSegmentArray[i].currentHealth = healthSegmentArray[i].maxHealth;
+                    if (segmentArray[i].currentHealth > segmentArray[i].maxHealth) segmentArray[i].currentHealth = segmentArray[i].maxHealth;
                 }
             }
         }
@@ -162,25 +176,9 @@ public class HealthController : MonoBehaviour {
     //Default public call with no special modifiers for damage
     public void applyDamage(float damage)
     {
-        switch (healthSegmentArray[currentSegment].segmentType)
-        {
-            case SegmentType.health:
-                applyDamageToSegment(damage, false);
-                break;
-            case SegmentType.shield:
-                damage = shieldDamageModifier();
-                applyDamageToSegment(damage, false);
-                break;
-            case SegmentType.armour:
-                damage = armourDamageModifier(damage);
-                applyDamageToSegment(damage, false);
-                break;
-            case SegmentType.barrier:
-                damage = barrierDamageModifier(damage);
-                applyDamageToSegment(damage, false);
-                break;
-        }
-        
+        //Apply modified damage to the current top health segment
+        updateTopHealthSegment();
+        applyDamageToSegment(getModifiedDamageValue(damage, currentSegment), false);
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -201,6 +199,58 @@ public class HealthController : MonoBehaviour {
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    //Called by other scripts to apply damage to this script/object.
+    //Call allows for specifying damage to only be applied if the segment matches the provided parameter. Uses a seperate
+    //damage application system due to a number of small changes in how damage is applied.
+    public void applyDamage (float damage, SegmentType type, bool ignoreModifiers)
+    {
+        //Iterate through all possible segment from top down
+        for (int i = segmentArray.Length - 1; i >= 0; i--)
+        {
+            //Check if we have a matching segment
+            if (segmentArray[i].segmentType == type)
+            {
+                //If we're going to be carrying damage past the first segment
+                if (segmentArray[i].carryDamageToNextSegment)
+                {
+                    //Modify damage if we need to
+                    if (ignoreModifiers == false) damage = getModifiedDamageValue(damage, i);
+
+                    //If we have damage overflow 
+                    if (segmentArray[i].currentHealth < damage)
+                    {
+                        //Modify the remaining damage and set current segment to zero
+                        damage -= segmentArray[i].currentHealth;
+                        segmentArray[i].currentHealth = 0;
+                    }
+                    //Otherwise we just apply all the damage here
+                    else
+                    {
+                        //Reduce the health by remaining damage
+                        segmentArray[i].currentHealth -= damage;
+                        //Stop checking the rest of the segment - saves on performance
+                        return;
+                    }
+                }
+                //Otherwise all damage ends here
+                else
+                {
+                    //Modify the damage values if we need to
+                    if (ignoreModifiers == false) damage = getModifiedDamageValue(damage, i);
+
+                    //Apply the damage to the current health segment
+                    segmentArray[i].currentHealth -= damage;
+                    //Make sure value does not go below zero
+                    if (segmentArray[i].currentHealth < 0) segmentArray[i].currentHealth = 0;
+
+                    //End damage application here
+                    return;
+                }
+            }
+        }
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     //Handles applying the provided damage value to the current segment for use. Also will track if damage overflow will
     //carried to the next segment if the option/boolean has been enabled
     private void applyDamageToSegment(float damage, bool ignoreModifers)
@@ -213,19 +263,19 @@ public class HealthController : MonoBehaviour {
         updateRechargeTimer();
      
         //If we have more health than the damage we're taking we directly apply it OR if this is the base health segment
-        if (damage <= healthSegmentArray[currentSegment].currentHealth || currentSegment == 0)
+        if (damage <= segmentArray[currentSegment].currentHealth || currentSegment == 0)
         {
-            healthSegmentArray[currentSegment].currentHealth -= damage;
+            segmentArray[currentSegment].currentHealth -= damage;
         }
         //Otherwise we have extra damage to apply to the next layer
         else
         {
             //Carry damage to next segment if selected
-            if (healthSegmentArray[currentSegment].carryDamageToNextSegment)
+            if (segmentArray[currentSegment].carryDamageToNextSegment)
             {
                 //Set te current segment to 0 and correct for new damage value
-                damage -= healthSegmentArray[currentSegment].currentHealth;
-                healthSegmentArray[currentSegment].currentHealth = 0;
+                damage -= segmentArray[currentSegment].currentHealth;
+                segmentArray[currentSegment].currentHealth = 0;
 
                 //Apply the damage on the new segment
                 applyDamage(damage, ignoreModifers);
@@ -233,7 +283,7 @@ public class HealthController : MonoBehaviour {
             //Otherwise all damage is applied here
             else
             {
-                healthSegmentArray[currentSegment].currentHealth = 0f;
+                segmentArray[currentSegment].currentHealth = 0f;
             }
         }
     }
@@ -244,12 +294,12 @@ public class HealthController : MonoBehaviour {
     private float armourDamageModifier(float damage)
     {
         //Modify damage for armour
-        damage -= healthSegmentArray[currentSegment].armourDamageReduction;
+        damage -= segmentArray[currentSegment].armourDamageReduction;
 
         //Correct damage value if it dips below the minimum
-        if (damage < healthSegmentArray[currentSegment].minimumArmourDamage)
+        if (damage < segmentArray[currentSegment].minimumArmourDamage)
         {
-            damage = healthSegmentArray[currentSegment].minimumArmourDamage;
+            damage = segmentArray[currentSegment].minimumArmourDamage;
         }
 
         return damage;
@@ -259,14 +309,14 @@ public class HealthController : MonoBehaviour {
     //Returns the constant damage a shield will take on each attack
     private float shieldDamageModifier()
     {
-        return healthSegmentArray[currentSegment].constantShieldDamage;
+        return segmentArray[currentSegment].constantShieldDamage;
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     //Returns damage as a percentage of the original paramter (decimal)
     private float barrierDamageModifier(float damage)
     {
-        return damage * healthSegmentArray[currentSegment].barrierDamageMitigation;
+        return damage * segmentArray[currentSegment].barrierDamageMitigation;
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -278,17 +328,38 @@ public class HealthController : MonoBehaviour {
         if (universalDamageReset)
         {
             //Iterate through all segments
-            for (int i = 0; i < healthSegmentArray.Length; i++)
+            for (int i = 0; i < segmentArray.Length; i++)
             {
                 //Reset recharge timer
-                healthSegmentArray[i].rechargeTimer = healthSegmentArray[i].rechargeDelay;
+                segmentArray[i].rechargeTimer = segmentArray[i].rechargeDelay;
             }
         }
         //Otherwise we're just reseting the current segment
         else
         {
-            healthSegmentArray[currentSegment].rechargeTimer = healthSegmentArray[currentSegment].rechargeDelay;
+            segmentArray[currentSegment].rechargeTimer = segmentArray[currentSegment].rechargeDelay;
         }
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    //Returns the modified value for damage to be applied to a segment based on the segmentType.
+    private float getModifiedDamageValue (float damage, int index)
+    {
+        switch (segmentArray[index].segmentType)
+        {
+            case SegmentType.health:
+                return damage;
+            case SegmentType.shield:
+                return shieldDamageModifier();
+            case SegmentType.armour:
+                return armourDamageModifier(damage);
+            case SegmentType.barrier:
+                return barrierDamageModifier(damage);
+        }
+
+        //Failed switch case - should never occur
+        Debug.LogError("ASSET CODE ERROR - Bad Segment Comparison - HealthController class attached to " + gameObject.name + " was unable to compare the segmentType ENUM on Segment " + index.ToString());
+        return damage;
     }
     #endregion
 
@@ -303,7 +374,7 @@ public class HealthController : MonoBehaviour {
         updateTopHealthSegment();
 
         //Check if we match with the provided segment type
-        if (healthSegmentArray[currentSegment].segmentType == type)
+        if (segmentArray[currentSegment].segmentType == type)
         {
             //Check if we are ignoring the segment damage modifiers
             if (ignoreModifiers) applyDamageToSegment(baseDamage + bonusDamage, true);
@@ -327,10 +398,10 @@ public class HealthController : MonoBehaviour {
         updateTopHealthSegment();
 
         //If the segment has no tags or has been set to not use tags we return and avoid doing any checks
-        if (healthSegmentArray[currentSegment].useTags == false || healthSegmentArray[currentSegment].specialTags.Length == 0) return;
+        if (segmentArray[currentSegment].useTags == false || segmentArray[currentSegment].specialTags.Length == 0) return;
 
         //Check each string in the tags array for a match
-        foreach (string t in healthSegmentArray[currentRechargeSegment].specialTags)
+        foreach (string t in segmentArray[currentRechargeSegment].specialTags)
         {
             //If we find a match then apply the bonus damage and return
             if (t.Equals(tag))
@@ -355,10 +426,10 @@ public class HealthController : MonoBehaviour {
         updateTopHealthSegment();
 
         //If the segment has no tags or has been set to not use tags we return and avoid doing any checks
-        if (healthSegmentArray[currentSegment].useTags == false || healthSegmentArray[currentSegment].specialTags.Length == 0) return;
+        if (segmentArray[currentSegment].useTags == false || segmentArray[currentSegment].specialTags.Length == 0) return;
 
         //Check each string in the tags array
-        foreach (string st in healthSegmentArray[currentRechargeSegment].specialTags)
+        foreach (string st in segmentArray[currentRechargeSegment].specialTags)
         {
             foreach (string t in tagArray)
             {
@@ -383,10 +454,10 @@ public class HealthController : MonoBehaviour {
     public void applyHealth (float health)
     {
         //iterate through all segments
-        for (int i = 0; i < healthSegmentArray.Length; i++)
+        for (int i = 0; i < segmentArray.Length; i++)
         {
             //if the current segment is missing health we apply healing
-            if (healthSegmentArray[i].currentHealth < healthSegmentArray[i].maxHealth)
+            if (segmentArray[i].currentHealth < segmentArray[i].maxHealth)
             {
                 //Record altered health value - method also causing healing to segment
                 health = applyHealthToSegment(health, i);
@@ -403,10 +474,10 @@ public class HealthController : MonoBehaviour {
     public void applyHealth (float health, SegmentType type)
     {
         //iterate through all segments
-        for (int i = 0; i < healthSegmentArray.Length; i++)
+        for (int i = 0; i < segmentArray.Length; i++)
         {
             //if the current segment is missing health and matches the segment type we appy healing
-            if (healthSegmentArray[i].currentHealth < healthSegmentArray[i].maxHealth && healthSegmentArray[i].segmentType == type)
+            if (segmentArray[i].currentHealth < segmentArray[i].maxHealth && segmentArray[i].segmentType == type)
             {
                 //Record altered health value - method also causing healing to segment
                 health = applyHealthToSegment(health, i);
@@ -423,10 +494,10 @@ public class HealthController : MonoBehaviour {
     public void applyHealth (float health, string tag)
     {
         //iterate through all segments
-        for (int i = 0; i < healthSegmentArray.Length; i++)
+        for (int i = 0; i < segmentArray.Length; i++)
         {
             //if the current segment is missing health we apply healing
-            if (healthSegmentArray[i].currentHealth < healthSegmentArray[i].maxHealth && tagDoesMatch(new string[]{tag}, i))
+            if (segmentArray[i].currentHealth < segmentArray[i].maxHealth && tagDoesMatch(new string[]{tag}, i))
             {
                 //Record altered health value - method also causing healing to segment
                 health = applyHealthToSegment(health, i);
@@ -443,10 +514,10 @@ public class HealthController : MonoBehaviour {
     public void applyHealth(float health, string[] tags)
     {
         //iterate through all segments
-        for (int i = 0; i < healthSegmentArray.Length; i++)
+        for (int i = 0; i < segmentArray.Length; i++)
         {
             //if the current segment is missing health we apply healing
-            if (healthSegmentArray[i].currentHealth < healthSegmentArray[i].maxHealth && tagDoesMatch(tags, i))
+            if (segmentArray[i].currentHealth < segmentArray[i].maxHealth && tagDoesMatch(tags, i))
             {
                 //Record altered health value - method also causing healing to segment
                 health = applyHealthToSegment(health, i);
@@ -462,7 +533,7 @@ public class HealthController : MonoBehaviour {
     private bool tagDoesMatch (string[] tags, int index)
     {
         //Checlk all special tags on the segment
-        foreach (string segTag in healthSegmentArray[index].specialTags)
+        foreach (string segTag in segmentArray[index].specialTags)
         {
             //Check against all provided tags
             foreach (string tag in tags)
@@ -481,14 +552,14 @@ public class HealthController : MonoBehaviour {
     private float applyHealthToSegment (float health, int index)
     {
         //Add healing amount
-        healthSegmentArray[index].currentHealth += health;
+        segmentArray[index].currentHealth += health;
         //Record the difference between current health and max health (positive value indicates overflow)
-        health = healthSegmentArray[index].currentHealth - healthSegmentArray[index].maxHealth;
+        health = segmentArray[index].currentHealth - segmentArray[index].maxHealth;
         //If current health has overflown we correct current health to max
-        if (health > 0) healthSegmentArray[index].currentHealth = healthSegmentArray[index].maxHealth;
+        if (health > 0) segmentArray[index].currentHealth = segmentArray[index].maxHealth;
 
         //If we can carry healing then return the remaining health to apply - or return 0 if no healing is to be carried
-        if (healthSegmentArray[index].carryHealingToNextSegment) return health;
+        if (segmentArray[index].carryHealingToNextSegment) return health;
         else return 0f;
     }
     #endregion
@@ -498,11 +569,11 @@ public class HealthController : MonoBehaviour {
     //Getter method for providing the current health of all segments
     public float[] getAllHealthValues ()
     {
-        float[] temp = new float[healthSegmentArray.Length];
+        float[] temp = new float[segmentArray.Length];
 
-        for (int i = 0; i < healthSegmentArray.Length; i++)
+        for (int i = 0; i < segmentArray.Length; i++)
         {
-            temp[i] = healthSegmentArray[i].currentHealth;
+            temp[i] = segmentArray[i].currentHealth;
         }
 
         return temp;
@@ -512,16 +583,16 @@ public class HealthController : MonoBehaviour {
     //Getter method for finding the number of segments tracked in this class
     public int getNumberOfSegments ()
     {
-        return healthSegmentArray.Length;
+        return segmentArray.Length;
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     //Returns the HealthSegment struct at the specified index within the healthSegmentArray
     public Nullable<HealthSegement> getHealthSegment (int segmentNumber)
     {
-        if (segmentNumber >= healthSegmentArray.Length) return null;
+        if (segmentNumber >= segmentArray.Length) return null;
 
-        return healthSegmentArray[segmentNumber];
+        return segmentArray[segmentNumber];
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -529,14 +600,14 @@ public class HealthController : MonoBehaviour {
     public HealthSegement getCurrentHealthSegment ()
     {
         updateTopHealthSegment();
-        return healthSegmentArray[currentSegment];
+        return segmentArray[currentSegment];
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     //Returns the array of all health segments
     public HealthSegement[] getSegmentArray ()
     {
-        return healthSegmentArray;
+        return segmentArray;
     }
     #endregion
 
@@ -561,6 +632,7 @@ public struct HealthSegement
 
     public bool carryDamageToNextSegment;
     public bool carryHealingToNextSegment;
+    public bool isDisabled;
 
     public SegmentType segmentType;
     public bool useTags;
@@ -588,3 +660,92 @@ public struct HealthSegement
 /// enum inside the struct
 /// </summary>
 public enum SegmentType { health, armour, shield, barrier }
+
+/// <summary>
+/// Class handles all modification of segment values whenever an event occurs where damage has been taken.
+/// </summary>
+class DamageControl
+{
+    private HealthSegement[] segmentArray;
+    private HealthController parent;
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    //Constructor
+    public DamageControl(HealthSegement[] segArray, HealthController p)
+    {
+        segmentArray = segArray;
+        parent = p;
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    //
+    internal float getSegmentModifiedDamage (float damage, int index)
+    {
+        switch (segmentArray[index].segmentType)
+        {
+            case SegmentType.health:
+                return damage;
+            case SegmentType.armour:
+                return modifyArmourDamage(damage, segmentArray[index].armourDamageReduction, segmentArray[index].minimumArmourDamage);
+            case SegmentType.shield:
+                return modifyShieldDamage(segmentArray[index].constantShieldDamage);
+            case SegmentType.barrier:
+                return modifyBarrierDamage(damage, segmentArray[index].barrierDamageMitigation);
+        }
+
+        Debug.LogError("HEALTH CONTROLLER SCRIPT - Failed SegmentType Comparison - Segment type could not be determined on segment #" + index.ToString() + " when modying damage to be taken. GameObject: " + parent.gameObject.name);
+        return damage;
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    //Returns damage value modified by the reduction applied on an armour segment. If reduced damage falls below the 
+    //provided minimum, the minimum is returned
+    private float modifyArmourDamage (float damage, float reduction, float min)
+    {
+        if (damage - reduction < min)
+        {
+            return min;
+        }
+        else
+        {
+            return (damage - reduction);
+        }
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    //Currently shield always applies the constant amount of damage making this method do virtually nothing, however should
+    //that be changed in the future I have included the method for formatting
+    private float modifyShieldDamage (float constantDamage)
+    {
+        return constantDamage;
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    //Returns damage as a mutliple of the factor parameter. Factor is expected to be less than zero to act as a percentage
+    private float modifyBarrierDamage (float damage, float factor)
+    {
+        return (damage * factor);
+    }
+}
+
+/// <summary>
+/// Class handles all modification of values whenever an event occurs where healing has been applied
+/// </summary>
+class HealingControl
+{
+    public HealingControl(HealthSegement[] segArray, HealthController parent)
+    {
+
+    }
+}
+
+/// <summary>
+/// Class handles keeping track of recharge times and modification for all segments during the course of gameplay
+/// </summary>
+class RechargeControl
+{
+    public RechargeControl(HealthSegement[] segArray, HealthController parent)
+    {
+
+    }
+}
