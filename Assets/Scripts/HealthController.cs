@@ -43,11 +43,12 @@ public class HealthController : MonoBehaviour {
         }
 
         //Initialize segment control classes
-        damageControl = new DamageControl(segmentArray, this);
+        
         healingControl = new HealingControl(segmentArray, this);
         rechargeControl = new RechargeControl(segmentArray, this);
+        damageControl = new DamageControl(segmentArray, rechargeControl, this);
 
-        
+        //float test = damageControl.applyDamageToSegment(10, 1);
     }
 
 
@@ -171,195 +172,114 @@ public class HealthController : MonoBehaviour {
     #endregion
 
     #region Apply Damage
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    //Called by others scripts to apply damage to this script/object
-    //Default public call with no special modifiers for damage
+    /// <summary>
+    /// Standard method for applying damage to a HealthController. Method will take provided damage paramter and apply it
+    /// to the top level of health (highest array index) and carry to following segments if carryDamageToNextSegment is enabled.
+    /// </summary>
+    /// <param name="damage">Float value of damage to be applied</param>
     public void applyDamage(float damage)
     {
-        //Apply modified damage to the current top health segment
-        updateTopHealthSegment();
-        applyDamageToSegment(getModifiedDamageValue(damage, currentSegment), false);
-    }
-
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    //Called by others scripts to apply damage to this script/object
-    //Call includes a boolean paramter for ignoring segment type modifiers
-    public void applyDamage (float damage, bool ignoreMofiers)
-    {
-        //If we're ignoring modifiers then we go straight to applying damage
-        if (ignoreMofiers)
-        {
-            applyDamageToSegment(damage, true);
-        }
-        //Otherwise we will modify the damage first using the default method call
-        else
-        {
-            applyDamage(damage);
-        }
-    }
-
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    //Called by other scripts to apply damage to this script/object.
-    //Call allows for specifying damage to only be applied if the segment matches the provided parameter. Uses a seperate
-    //damage application system due to a number of small changes in how damage is applied.
-    public void applyDamage (float damage, SegmentType type, bool ignoreModifiers)
-    {
-        //Iterate through all possible segment from top down
+        //Iterate though all segment starting at the top layer
         for (int i = segmentArray.Length - 1; i >= 0; i--)
         {
-            //Check if we have a matching segment
-            if (segmentArray[i].segmentType == type)
+            //Stop applying damage if zero
+            if (damage == 0) return;
+
+            //Only modify non-disbaled segments
+            if (segmentArray[i].isDisabled == false)
             {
-                //If we're going to be carrying damage past the first segment
-                if (segmentArray[i].carryDamageToNextSegment)
+                //Update damage for segment type
+                damage = damageControl.getSegmentModifiedDamage(damage, i);
+                //Apply the damage and get new value
+                damage = damageControl.applyDamageToSegment(damage, i);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Method for applying damage to a HealthController. Method will take provided damage paramter and a boolean for indicating if 
+    /// modifiers will be used on the segment taking damage. Damage will be applied from the top level (highest array index) and will
+    /// carry to the following segments if carryDamageToNextSegment is enabled.
+    /// </summary>
+    /// <param name="damage">Float value of damage to be applied</param>
+    /// <param name="ignoreModifiers">Boolean value determining if segment modifiers are ignored</param>
+    public void applyDamage (float damage, bool ignoreModifiers)
+    {
+        for (int i = segmentArray.Length - 1; i >= 0; i--)
+        {
+            //Stop applying damage if zero
+            if (damage == 0) return;
+
+            //Only modify non-disabled segments
+            if (segmentArray[i].isDisabled == false)
+            {
+                //Update damage for segment type if modifiers are not ignored
+                if (ignoreModifiers == false) damage = damageControl.getSegmentModifiedDamage(damage, i);
+                //Apply the damage and get new value
+                damage = damageControl.applyDamageToSegment(damage, i);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Method for applying damage to a HealthController. Method will take provided damage value, boolean for ingoring segment type 
+    /// modifiers, and a SegmentType to apply damage to the segments. Damage will only be applied to a segment if the SegmentType matches
+    /// between the segment in the array and the paramter. Additionally the onlyRunIfTopSegmentMatches boolean allows for having damage 
+    /// be applied only when the top segment matches the SegmentType paramter. 
+    /// Damage is applied from the top level (highest array index) and will carry
+    /// to the following segments that match if carryDamageToNextSegment is enabled.
+    /// </summary>
+    /// <param name="damage">Float value of damage to be applied</param>
+    /// <param name="ignoreModifiers">Boolean value determining if segment modifiers are ignored</param>
+    /// <param name="type">SegmentType ENUM to compare with the SegmentType found on each segment</param>
+    /// <param name="onlyRunIfTopSegmentMatches">Boolean value - Damage will only be applied if the top segment matches the SegmentType paramter</param>
+    public void applyDamage (float damage, bool ignoreModifiers, SegmentType type, bool onlyRunIfTopSegmentMatches)
+    {
+        //Check for top health segment matching the SegmentType param
+        if (onlyRunIfTopSegmentMatches)
+        {
+            //Iterate though the segmentArray looking for the top segment with health
+            for (int i = segmentArray.Length - 1; i >= 0; i--)
+            {
+                if (segmentArray[i].currentHealth > 0 && segmentArray[i].isDisabled == false)
                 {
-                    //Modify damage if we need to
-                    if (ignoreModifiers == false) damage = getModifiedDamageValue(damage, i);
-
-                    //If we have damage overflow 
-                    if (segmentArray[i].currentHealth < damage)
-                    {
-                        //Modify the remaining damage and set current segment to zero
-                        damage -= segmentArray[i].currentHealth;
-                        segmentArray[i].currentHealth = 0;
-                    }
-                    //Otherwise we just apply all the damage here
-                    else
-                    {
-                        //Reduce the health by remaining damage
-                        segmentArray[i].currentHealth -= damage;
-                        //Stop checking the rest of the segment - saves on performance
-                        return;
-                    }
-                }
-                //Otherwise all damage ends here
-                else
-                {
-                    //Modify the damage values if we need to
-                    if (ignoreModifiers == false) damage = getModifiedDamageValue(damage, i);
-
-                    //Apply the damage to the current health segment
-                    segmentArray[i].currentHealth -= damage;
-                    //Make sure value does not go below zero
-                    if (segmentArray[i].currentHealth < 0) segmentArray[i].currentHealth = 0;
-
-                    //End damage application here
-                    return;
+                    //If the top segment found does not match we do nothing - return void
+                    if (segmentArray[i].segmentType != type) return;
                 }
             }
         }
-    }
 
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    //Handles applying the provided damage value to the current segment for use. Also will track if damage overflow will
-    //carried to the next segment if the option/boolean has been enabled
-    private void applyDamageToSegment(float damage, bool ignoreModifers)
-    {
-        //Update the top segment for applying damage and return if we hit a player death case
-        updateTopHealthSegment();
-        if (currentSegment == -1) return;
-
-        //Update the recharge timer for this segment since it's taking damage
-        updateRechargeTimer();
-     
-        //If we have more health than the damage we're taking we directly apply it OR if this is the base health segment
-        if (damage <= segmentArray[currentSegment].currentHealth || currentSegment == 0)
+        //Iterate through the segment array 
+        for (int i = segmentArray.Length - 1; i >= 0; i--)
         {
-            segmentArray[currentSegment].currentHealth -= damage;
-        }
-        //Otherwise we have extra damage to apply to the next layer
-        else
-        {
-            //Carry damage to next segment if selected
-            if (segmentArray[currentSegment].carryDamageToNextSegment)
-            {
-                //Set te current segment to 0 and correct for new damage value
-                damage -= segmentArray[currentSegment].currentHealth;
-                segmentArray[currentSegment].currentHealth = 0;
+            //Stop applying damage if zero
+            if (damage == 0) return;
 
-                //Apply the damage on the new segment
-                applyDamage(damage, ignoreModifers);
-            }
-            //Otherwise all damage is applied here
-            else
+            //If the segment is not disabled and matches the type, we apply damage
+            if (segmentArray[i].isDisabled == false && segmentArray[i].segmentType == type)
             {
-                segmentArray[currentSegment].currentHealth = 0f;
+                //Modify damage if ignoreModifiers is false
+                if (ignoreModifiers == false) damage = damageControl.getSegmentModifiedDamage(damage, i);
+                //Apply damage to the segment and get remaining damage
+                damage = damageControl.applyDamageToSegment(damage, i);
             }
         }
     }
 
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    //Returns the damage modified to be reduced by a set value or returns the minimum damage for an armour layer if the 
-    //damage falls below the min threshold
-    private float armourDamageModifier(float damage)
+    /// <summary>
+    ///Method for applying damage to a HealthController.Method will take provided damage value, boolean for ingoring segment type
+    /// modifiers, and a SegmentType to apply damage to the segments. Damage will only be applied to a segment if the SegmentType matches
+    /// between the segment in the array and the paramter. Damage is applied from the top level (highest array index) and will carry
+    /// to the following segments that match if carryDamageToNextSegment is enabled.
+    /// </summary>
+    /// <param name="damage">Float value of damage to be applied</param>
+    /// <param name="ignoreModifiers">Boolean value determining if segment modifiers are ignored</param>
+    /// <param name="type">SegmentType ENUM to compare with the SegmentType found on each segment</param>
+    public void applyDamage (float damage, bool ignoreModifiers, SegmentType type)  
     {
-        //Modify damage for armour
-        damage -= segmentArray[currentSegment].armourDamageReduction;
-
-        //Correct damage value if it dips below the minimum
-        if (damage < segmentArray[currentSegment].minimumArmourDamage)
-        {
-            damage = segmentArray[currentSegment].minimumArmourDamage;
-        }
-
-        return damage;
-    }
-
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    //Returns the constant damage a shield will take on each attack
-    private float shieldDamageModifier()
-    {
-        return segmentArray[currentSegment].constantShieldDamage;
-    }
-
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    //Returns damage as a percentage of the original paramter (decimal)
-    private float barrierDamageModifier(float damage)
-    {
-        return damage * segmentArray[currentSegment].barrierDamageMitigation;
-    }
-
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    //Called whenever the segment takes damage to reset recharge timer
-    //Uses current segment for individual recharge since that segment defines damage and recharge if universal is disabled
-    private void updateRechargeTimer ()
-    {
-        //If we have universal damage reset we reset all recharge timers anytime damage is taken
-        if (universalDamageReset)
-        {
-            //Iterate through all segments
-            for (int i = 0; i < segmentArray.Length; i++)
-            {
-                //Reset recharge timer
-                segmentArray[i].rechargeTimer = segmentArray[i].rechargeDelay;
-            }
-        }
-        //Otherwise we're just reseting the current segment
-        else
-        {
-            segmentArray[currentSegment].rechargeTimer = segmentArray[currentSegment].rechargeDelay;
-        }
-    }
-
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    //Returns the modified value for damage to be applied to a segment based on the segmentType.
-    private float getModifiedDamageValue (float damage, int index)
-    {
-        switch (segmentArray[index].segmentType)
-        {
-            case SegmentType.health:
-                return damage;
-            case SegmentType.shield:
-                return shieldDamageModifier();
-            case SegmentType.armour:
-                return armourDamageModifier(damage);
-            case SegmentType.barrier:
-                return barrierDamageModifier(damage);
-        }
-
-        //Failed switch case - should never occur
-        Debug.LogError("ASSET CODE ERROR - Bad Segment Comparison - HealthController class attached to " + gameObject.name + " was unable to compare the segmentType ENUM on Segment " + index.ToString());
-        return damage;
+        //Code works the same as the above method, this one redirects there to save on space.
+        //Only difference is the check for matching top segments. Wanted to provide both for developer ease.
+        applyDamage(damage, ignoreModifiers, type, false); 
     }
     #endregion
 
@@ -668,19 +588,23 @@ class DamageControl
 {
     private HealthSegement[] segmentArray;
     private HealthController parent;
+    private RechargeControl rechargeControl;
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     //Constructor
-    public DamageControl(HealthSegement[] segArray, HealthController p)
+    public DamageControl(HealthSegement[] segmentArray, RechargeControl rechargeControl, HealthController parent)
     {
-        segmentArray = segArray;
-        parent = p;
+        this.segmentArray = segmentArray;
+        this.rechargeControl = rechargeControl;
+        this.parent = parent;
     }
 
+    #region Damage Modification
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    //
+    //Returns a modified float of the provided "damage" param based on the SegmentType of the provided segment
     internal float getSegmentModifiedDamage (float damage, int index)
     {
+        //Return modified damage based on segment type
         switch (segmentArray[index].segmentType)
         {
             case SegmentType.health:
@@ -693,6 +617,7 @@ class DamageControl
                 return modifyBarrierDamage(damage, segmentArray[index].barrierDamageMitigation);
         }
 
+        //Base return case that should never be reached
         Debug.LogError("HEALTH CONTROLLER SCRIPT - Failed SegmentType Comparison - Segment type could not be determined on segment #" + index.ToString() + " when modying damage to be taken. GameObject: " + parent.gameObject.name);
         return damage;
     }
@@ -725,6 +650,32 @@ class DamageControl
     private float modifyBarrierDamage (float damage, float factor)
     {
         return (damage * factor);
+    }
+    #endregion
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    //Handles applying damage to a specified segment based on the param values. Returns the remaining damage if there is 
+    //extra damage to be applied to the next segment if the current segment has carryDamageToNextSegment set true.
+    internal float applyDamageToSegment (float damage, int index)
+    {
+        //If we have more damage to apply than the segment has health
+        if (segmentArray[index].currentHealth < damage)
+        {
+            //Update damage with the difference and set current health to zero
+            damage -= segmentArray[index].currentHealth;
+            segmentArray[index].currentHealth = 0;
+        }
+        //Otherwise we can just apply all damage
+        else
+        {
+            segmentArray[index].currentHealth -= damage;
+            damage = 0f;
+        }
+
+        //Return the remaining damage if we are carrying to the next segment
+        if (segmentArray[index].carryDamageToNextSegment) return damage;
+        //Otherwise we will have no damage to continue with
+        else return 0f;
     }
 }
 
