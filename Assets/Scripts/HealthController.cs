@@ -42,13 +42,12 @@ public class HealthController : MonoBehaviour {
             segmentArray[i].rechargeTimer = segmentArray[i].rechargeDelay;
         }
 
-        //Initialize segment control classes
-        
+        //Initialize segment control classes      
         healingControl = new HealingControl(segmentArray, this);
         rechargeControl = new RechargeControl(segmentArray, this);
         damageControl = new DamageControl(segmentArray, rechargeControl, this);
 
-        //float test = damageControl.applyDamageToSegment(10, 1);
+        getAllHealthValues();
     }
 
     //DONE
@@ -274,8 +273,11 @@ public class HealthController : MonoBehaviour {
 
     //To Update
     #region Getter Methods
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    //Getter method for providing the current health of all segments
+    /// <summary>
+    /// Getter method that returns an array of floats representing the currentHealth variable on each of the HealthSegments
+    /// found in the segmentArray array.
+    /// </summary>
+    /// <returns>Array of floats holding all currentHealth segment values</returns>
     public float[] getAllHealthValues ()
     {
         float[] temp = new float[segmentArray.Length];
@@ -288,32 +290,58 @@ public class HealthController : MonoBehaviour {
         return temp;
     }
 
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    //Getter method for finding the number of segments tracked in this class
+    /// <summary>
+    /// Getter method for finding the number of segments (or array length) of the segmentArray. 
+    /// You can also consider this to be the number of health segments this class has. 
+    /// </summary>
+    /// <returns></returns>
     public int getNumberOfSegments ()
     {
         return segmentArray.Length;
     }
 
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    //Returns the HealthSegment struct at the specified index within the healthSegmentArray
-    public Nullable<HealthSegment> getHealthSegment (int segmentNumber)
+    /// <summary>
+    /// Getter method for retrieving a single HealthSegment from the segmentArray array. Use this if you would like 
+    /// to manually read or edit variables inside each segment instead of relying on the provided public methods for 
+    /// data manipulation.
+    /// 
+    /// Returns null if an invalid index is provided. Use getNumberOfSegments() call to make sure you do not try to 
+    /// access an element that does not exist.
+    /// </summary>
+    /// <param name="segmentNumber">Index location of the HealthSegment in the array</param>
+    /// <returns>HealthSegment struct at the provided index</returns>
+    public HealthSegment? getHealthSegment (int segmentNumber)
     {
-        if (segmentNumber >= segmentArray.Length) return null;
+        if (segmentNumber >= segmentArray.Length || segmentNumber < 0) return null;
 
         return segmentArray[segmentNumber];
     }
 
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    //Returns the HealthSegment currently being modified when applying damage
-    public HealthSegment getCurrentHealthSegment ()
+    /// <summary>
+    /// Getter method for retreiving the current segment that damage will be applied to if any applyDamage methods are 
+    /// called. 
+    /// 
+    /// Returns null if all segments have no health or are disabled. The unit should be dead by that point so I'm not
+    /// sure why you're calling this method. 
+    /// </summary>
+    /// <returns>First HealthSegment that damage can be applied to</returns>
+    public HealthSegment? getCurrentHealthSegment ()
     {
-        updateTopHealthSegment();
-        return segmentArray[currentSegment];
+        //Run through all the segments from the top down
+        for (int i = segmentArray.Length - 1; i >= 0; i--)
+        {
+            //If we find one with health that's not disabled we return it
+            if (segmentArray[i].currentHealth > 0 && segmentArray[i].isDisabled == false) return segmentArray[i];
+        }
+
+        //Failsafe call - should never happen
+        return null;
     }
 
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    //Returns the array of all health segments
+    /// <summary>
+    /// Getter method for retrieving the entire array of HealthSegments. 
+    /// </summary>
+    /// <returns>Array of HealthSegment</returns>
     public HealthSegment[] getSegmentArray ()
     {
         return segmentArray;
