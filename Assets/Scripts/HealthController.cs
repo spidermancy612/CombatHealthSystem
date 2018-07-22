@@ -9,16 +9,11 @@ using System;
 /// </summary>
 public class HealthController : MonoBehaviour {
 
-    public HealthSegment[] segmentArray;         // Array of Structs holding health segment data
+    public HealthSegment[] segmentArray;                // Array of Structs holding health segment data
 
-    private DamageControl   damageControl;
-    private HealingControl  healingControl;
-    private RechargeControl rechargeControl;
-
-    private int currentSegment;                         // Current segment for applying damage
-    private int currentRechargeSegment;                 // Current segment for updating the recharge state
-
-    private bool canRechargeSomeSegment;                // Boolean set to false if no segments have recharge options - saves on segment checks for performance
+    private DamageControl   damageControl;              // Class holding all actions taken related to damage
+    private HealingControl  healingControl;             // Class holding all actions taken related to healing
+    private RechargeControl rechargeControl;            // Class holding all actions taken related to recharge
 
     public bool universalRecharge;                      // Inspector flag for allowing recharging of segments one at a time
     public bool universalDamageReset;                   // Inspector flag for having any damage reset all segment recharge timers
@@ -53,6 +48,14 @@ public class HealthController : MonoBehaviour {
     private void Update()
     {
         rechargeControl.updateCalls();
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    //Called for when the object dies - runs out of health on lowest layer 
+    private void deathEvent()
+    {
+        Debug.Log(gameObject.name + " has died!");                          //DEV NOTE - Add your death event here
+        gameObject.SetActive(false);
     }
 
     #region Apply Damage
@@ -275,6 +278,121 @@ public class HealthController : MonoBehaviour {
     }
     #endregion
 
+    #region Apply Health
+    /// <summary>
+    /// Simple call for applying health to the segment array. Method will start at index zero and add to currentHealth. 
+    /// If the carryHealingToNextSegment boolean is enabled the method will continue to the next index and apply health there.
+    /// Process will repeat until health reaches zero or no carry over has been specified on the segment. Providing a health 
+    /// parameter of zero or less will result in no action taken.
+    /// </summary>
+    /// <param name="health">Float value - Amount of health to be applied</param>
+    public void applyHealth (float health)
+    {
+        //Iterate through the segment array
+        for (int i = 0; i < segmentArray.Length; i++)
+        {
+            //Stop applying health if there is none left
+            if (health <= 0) return;
+
+            //Apply health and get remaining for next segment - will return zero if carry healing disabled
+            health = healingControl.applyHealthToSegment(health, segmentArray[i]);
+        }
+    }
+
+    /// <summary>
+    /// Called to apply health based on segmentType from each segment. Method starts at index zero and adds health to
+    /// currentHealth. If the carryHealingToNextSegment boolean is enabled the method will continue to the next index and apply health there.
+    /// Process will repeat until health reaches zero or no carry over has been specified on the segment. Providing a health 
+    /// parameter of zero or less will result in no action taken.
+    /// </summary>
+    /// <param name="health">Float value - Amount of health to be applied</param>
+    /// <param name="type">SegmentType ENUM - Type of segment to apply health to</param>
+    public void applyHealth (float health, SegmentType type)
+    {
+        //Iterate through the segment array
+        for (int i = 0; i < segmentArray.Length; i++)
+        {
+            //Stop applying health if there is none left
+            if (health <= 0) return;
+
+            //Only apply health if segment types match
+            if (segmentArray[i].segmentType == type)
+            {
+                health = healingControl.applyHealthToSegment(health, segmentArray[i]);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Called to apply health if the provided string (tag) matches one of the tags found in the specialTags array
+    /// for the current segment. Method starts at index zero and adds health to
+    /// currentHealth. If the carryHealingToNextSegment boolean is enabled the method will continue to the next index and apply health there.
+    /// Process will repeat until health reaches zero or no carry over has been specified on the segment. Providing a health 
+    /// parameter of zero or less will result in no action taken.
+    /// </summary>
+    /// <param name="health">Float value - Amount of health to be applied</param>
+    /// <param name="tag">String value - string to match to one of the strings in the specialTags array for each segment</param>
+    public void applyHealth (float health, string tag)
+    {
+        //Iterate through the segment array
+        for (int i = 0; i < segmentArray.Length; i++)
+        {
+            //Stop applying health if there is none left
+            if (health <= 0) return;
+
+            //Only apply health if tag matches one of the special tags
+            if (stringMatched(new string[] {tag}, segmentArray[i]))
+            {
+                health = healingControl.applyHealthToSegment(health, segmentArray[i]);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Called to apply health if one of the tags in the provied string array matches one of the strings in the segment's
+    /// specialTags array. Method starts at index zero and adds health to
+    /// currentHealth. If the carryHealingToNextSegment boolean is enabled the method will continue to the next index and apply health there.
+    /// Process will repeat until health reaches zero or no carry over has been specified on the segment. Providing a health 
+    /// parameter of zero or less will result in no action taken.
+    /// </summary>
+    /// <param name="health">Float value - Amount of health to be applied</param>
+    /// <param name="tags">Array of strings to compare with the specialTags array on the segment</param>
+    public void applyHealth (float health, string[] tags)
+    {
+        //Iterate through the segment array
+        for (int i = 0; i < segmentArray.Length; i++)
+        {
+            //Stop applying health if there is none left
+            if (health <= 0) return;
+
+            //Only apply health if one of the provided tags matches the specialTags array
+            if (stringMatched(tags, segmentArray[i]))
+            {
+                health = healingControl.applyHealthToSegment(health, segmentArray[i]);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Called to apply health directly to a segment based on a provided index for the segmentArray. 
+    /// Providing an index out of the array bounds will result in no action taken. Providing a health value of zero or
+    /// less will result in no action taken.
+    /// </summary>
+    /// <param name="health">Float value - Amount of health to be applied</param>
+    /// <param name="index">Int value - index location of the segment to apply health to</param>
+    public void applyHealth (float health, int index)
+    {
+        //Prevent silly calls from running
+        if (health <= 0) return;
+        if (index < 0 || index >= segmentArray.Length) return;
+
+        //Add health and fix any overflow
+        segmentArray[index].currentHealth += health;
+        if (segmentArray[index].currentHealth > segmentArray[index].maxHealth)
+            segmentArray[index].currentHealth = segmentArray[index].maxHealth;
+    }
+    #endregion
+
     #region Getter Methods
     /// <summary>
     /// Getter method that returns an array of floats representing the currentHealth variable on each of the HealthSegments
@@ -349,15 +467,7 @@ public class HealthController : MonoBehaviour {
     {
         return segmentArray;
     }
-    #endregion
-
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    //Called for when the object dies - runs out of health on lowest layer 
-    private void deathEvent ()
-    {
-        Debug.Log(gameObject.name + " has died!");                          //DEV NOTE - Add your death event here
-        gameObject.SetActive(false);
-    } 
+    #endregion   
 }
 
 #region Segment Data
@@ -516,6 +626,30 @@ class HealingControl
     {
         segmentArray = segArray;
         this.parent = parent;
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    //Handles applying health to the specified segment provided on the paramters. Returns remaining health if healing is 
+    //carried to the next segment, else returns zero
+    internal float applyHealthToSegment (float health, HealthSegment segment)
+    {
+        //If we have more health than possible to add
+        if (segment.maxHealth - segment.currentHealth < health)
+        {
+            //Update health for remaining value and set current health to max
+            health -= segment.maxHealth - segment.currentHealth;
+            segment.currentHealth = segment.maxHealth;
+        }
+        //Otherwise we can just apply all the health
+        else
+        {
+            //Add health and set health to zero
+            segment.currentHealth += health;
+            health = 0f;
+        }
+
+        if (segment.carryHealingToNextSegment) return health;
+        else return 0f;
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
