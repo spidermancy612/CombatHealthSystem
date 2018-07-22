@@ -279,15 +279,35 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d3c609a9686eaf84f95b09a80fb4e2a9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  healthSegmentArray:
-  - maxHealth: 100
-    startActive: 1
+  segmentArray:
+  - maxHealth: 0
+    startActive: 0
     carryDamageToNextSegment: 0
     carryHealingToNextSegment: 0
+    isDisabled: 0
     segmentType: 0
     useTags: 0
     specialTags: []
     canRecharge: 0
+    damageResetsRecharge: 0
+    rechargeRate: 0
+    rechargeDelay: 0
+    armourDamageReduction: 0
+    minimumArmourDamage: 0
+    constantShieldDamage: 0
+    barrierDamageMitigation: 0
+    currentHealth: 0
+    rechargeTimer: 0
+  - maxHealth: 0
+    startActive: 0
+    carryDamageToNextSegment: 0
+    carryHealingToNextSegment: 0
+    isDisabled: 0
+    segmentType: 1
+    useTags: 0
+    specialTags: []
+    canRecharge: 0
+    damageResetsRecharge: 0
     rechargeRate: 0
     rechargeDelay: 0
     armourDamageReduction: 0
@@ -298,7 +318,7 @@ MonoBehaviour:
     rechargeTimer: 0
   universalRecharge: 1
   universalDamageReset: 0
-  arraySize: 1
+  arraySize: 2
 --- !u!4 &2095509122
 Transform:
   m_ObjectHideFlags: 0

@@ -60,8 +60,7 @@ public class HealthController : MonoBehaviour {
 
     #region Apply Damage
     /// <summary>
-    /// Standard method for applying damage to a HealthController. Method will take provided damage paramter and apply it
-    /// to the top level of health (highest array index) and carry to following segments if carryDamageToNextSegment is enabled.
+    /// Applies damage to segments without discrimination.
     /// </summary>
     /// <param name="damage">Float value - Damage to be applied</param>
     public void applyDamage(float damage)
@@ -86,9 +85,7 @@ public class HealthController : MonoBehaviour {
     }
 
     /// <summary>
-    /// Method for applying damage to a HealthController. Method will take provided damage paramter and a boolean for indicating if 
-    /// modifiers will be used on the segment taking damage. Damage will be applied from the top level (highest array index) and will
-    /// carry to the following segments if carryDamageToNextSegment is enabled.
+    /// Applies damage to segments without discrimination. Allows for skipping damage modifications made by a segment type.
     /// </summary>
     /// <param name="damage">Float value - Damage to be applied</param>
     /// <param name="ignoreModifiers">Boolean value - Determines if segment modifiers will be applied to damage paramter</param>
@@ -113,10 +110,8 @@ public class HealthController : MonoBehaviour {
     }
 
     /// <summary>
-    ///Method for applying damage to a HealthController.Method will take provided damage value, boolean for ingoring segment type
-    /// modifiers, and a SegmentType to apply damage to the segments. Damage will only be applied to a segment if the SegmentType matches
-    /// between the segment in the array and the paramter. Damage is applied from the top level (highest array index) and will carry
-    /// to the following segments that match if carryDamageToNextSegment is enabled.
+    /// Applies damage to a segment if the segmentType matches the provided one. Allows for skipping damage modification 
+    /// made by a segment type.
     /// </summary>
     /// <param name="damage">Float value - Damage to be applied</param>
     /// <param name="ignoreModifiers">Boolean value - Determines if segment modifiers will be applied to damage paramter</param>
@@ -129,12 +124,8 @@ public class HealthController : MonoBehaviour {
     }
 
     /// <summary>
-    /// Method for applying damage to a HealthController. Method will take provided damage value, boolean for ingoring segment type 
-    /// modifiers, and a SegmentType to apply damage to the segments. Damage will only be applied to a segment if the SegmentType matches
-    /// between the segment in the array and the paramter. Additionally the onlyRunIfTopSegmentMatches boolean allows for having damage 
-    /// be applied only when the top segment matches the SegmentType paramter. 
-    /// Damage is applied from the top level (highest array index) and will carry
-    /// to the following segments that match if carryDamageToNextSegment is enabled.
+    /// Applies damage to the first segment with health if it matches the provided segment type. Otherwise no damage is applied.
+    /// Allows for skipping damage modification made by a segment type.
     /// </summary>
     /// <param name="damage">Float value - Damage to be applied</param>
     /// <param name="ignoreModifiers">Boolean value - Determines if segment modifiers will be applied to damage paramter</param>
@@ -176,10 +167,8 @@ public class HealthController : MonoBehaviour {
     }
 
     /// <summary>
-    /// Method for applying damage to a HealthController. Method will take provided damage value, boolean for ignoring segment type
-    /// modifiers, and a string tag. Damage will only be applied to a segment if the provided tag matches one of the tags on a segment.
-    /// Damage is applied from the top level (highest array index) and will carry to the following segments that match if 
-    /// carryDamageToNextSegment is enabled. 
+    /// Applies damage to a segment if the provided string matches any in the specialTags array.
+    /// Allows for skipping damage modification made by a segment type.
     /// </summary>
     /// <param name="damage">Float value - Damage to be applied</param>
     /// <param name="ignoreModifiers">Boolean value - Determines if segment modifiers will be applied to damage paramter</param>
@@ -189,6 +178,8 @@ public class HealthController : MonoBehaviour {
         //Iterate though all segments in the array
         for (int i = segmentArray.Length - 1; i >= 0; i--)
         {
+            if (segmentArray[i].useTags == false) continue;
+
             //If we have no damage, return
             if (damage <= 0) return;
 
@@ -206,10 +197,8 @@ public class HealthController : MonoBehaviour {
     }
 
     /// <summary>
-    /// Method for applying damage to a HealthController. Method will take provided damage value, boolean for ignoring segment type
-    /// modifiers, and a string array. Damage will only be applied to a segment if the provided array matches one of the tags on a segment.
-    /// Damage is applied from the top level (highest array index) and will carry to the following segments that match if 
-    /// carryDamageToNextSegment is enabled. 
+    /// Applies damage to a segment if any strings in the provided array match a string in the specialTags array.
+    /// Allows for skipping damage modification made by a segment type.
     /// </summary>
     /// <param name="damage">Float value - Damage to be applied</param>
     /// <param name="ignoreModifiers">Boolean value - Determines if segment modifiers will be applied to damage paramter</param>
@@ -219,6 +208,8 @@ public class HealthController : MonoBehaviour {
         //Iterate though all segments in the array
         for (int i = segmentArray.Length - 1; i >= 0; i--)
         {
+            if (segmentArray[i].useTags == false) continue;
+
             //If we have no damage, return
             if (damage <= 0) return;
 
@@ -236,10 +227,8 @@ public class HealthController : MonoBehaviour {
     }
 
     /// <summary>
-    /// Method for applying damage directly to a specified segment without checking any other segments. IgnoreModifiers 
-    /// boolean included to allow for skipping damage to a segment if enabled, otherwise damage is applied normally with
-    /// no carry over to following segments. 
-    /// Providing an invalid index for the array will result in no action being taken.
+    /// Applies damage to a specific segment at the provided segment. Use getNumberOfSegments() to make sure you have a correct index.
+    /// Allows for skipping damage modification made by a segment type.
     /// </summary>
     /// <param name="damage">Float value - Damage to be applied</param>
     /// <param name="ignoreModifiers">Boolean value - Determines if the segment modifiers will be applied to the damage parameter</param>
@@ -280,10 +269,7 @@ public class HealthController : MonoBehaviour {
 
     #region Apply Health
     /// <summary>
-    /// Simple call for applying health to the segment array. Method will start at index zero and add to currentHealth. 
-    /// If the carryHealingToNextSegment boolean is enabled the method will continue to the next index and apply health there.
-    /// Process will repeat until health reaches zero or no carry over has been specified on the segment. Providing a health 
-    /// parameter of zero or less will result in no action taken.
+    /// Simple call for applying health to segment array without discrimination.
     /// </summary>
     /// <param name="health">Float value - Amount of health to be applied</param>
     public void applyHealth (float health)
@@ -300,10 +286,7 @@ public class HealthController : MonoBehaviour {
     }
 
     /// <summary>
-    /// Called to apply health based on segmentType from each segment. Method starts at index zero and adds health to
-    /// currentHealth. If the carryHealingToNextSegment boolean is enabled the method will continue to the next index and apply health there.
-    /// Process will repeat until health reaches zero or no carry over has been specified on the segment. Providing a health 
-    /// parameter of zero or less will result in no action taken.
+    /// Applies health to segments that have a matching segment type.
     /// </summary>
     /// <param name="health">Float value - Amount of health to be applied</param>
     /// <param name="type">SegmentType ENUM - Type of segment to apply health to</param>
@@ -324,11 +307,7 @@ public class HealthController : MonoBehaviour {
     }
 
     /// <summary>
-    /// Called to apply health if the provided string (tag) matches one of the tags found in the specialTags array
-    /// for the current segment. Method starts at index zero and adds health to
-    /// currentHealth. If the carryHealingToNextSegment boolean is enabled the method will continue to the next index and apply health there.
-    /// Process will repeat until health reaches zero or no carry over has been specified on the segment. Providing a health 
-    /// parameter of zero or less will result in no action taken.
+    /// Applies health to segments that have a matching string in the specialTags array.
     /// </summary>
     /// <param name="health">Float value - Amount of health to be applied</param>
     /// <param name="tag">String value - string to match to one of the strings in the specialTags array for each segment</param>
@@ -349,11 +328,7 @@ public class HealthController : MonoBehaviour {
     }
 
     /// <summary>
-    /// Called to apply health if one of the tags in the provied string array matches one of the strings in the segment's
-    /// specialTags array. Method starts at index zero and adds health to
-    /// currentHealth. If the carryHealingToNextSegment boolean is enabled the method will continue to the next index and apply health there.
-    /// Process will repeat until health reaches zero or no carry over has been specified on the segment. Providing a health 
-    /// parameter of zero or less will result in no action taken.
+    /// Applies health to segments that have a matching string between the provided string array and the specialTags.
     /// </summary>
     /// <param name="health">Float value - Amount of health to be applied</param>
     /// <param name="tags">Array of strings to compare with the specialTags array on the segment</param>
@@ -374,9 +349,7 @@ public class HealthController : MonoBehaviour {
     }
 
     /// <summary>
-    /// Called to apply health directly to a segment based on a provided index for the segmentArray. 
-    /// Providing an index out of the array bounds will result in no action taken. Providing a health value of zero or
-    /// less will result in no action taken.
+    /// Applies health to a single segment at the provided index.
     /// </summary>
     /// <param name="health">Float value - Amount of health to be applied</param>
     /// <param name="index">Int value - index location of the segment to apply health to</param>

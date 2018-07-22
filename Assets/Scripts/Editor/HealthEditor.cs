@@ -23,7 +23,7 @@ public class HealthEditor : Editor {
         serializedObject.Update();    
 
         health = (HealthController)target;
-        healthSegmentArray = serializedObject.FindProperty("healthSegmentArray");
+        healthSegmentArray = serializedObject.FindProperty("segmentArray");
         segmentArraySize = serializedObject.FindProperty("arraySize");
 
         GUILayout.Label("Health Segments");

@@ -61,6 +61,7 @@
   <ItemGroup>
     <Compile Include="Assets\Scripts\Healer.cs" />
     <Compile Include="Assets\Scripts\HealthController.cs" />
+    <Compile Include="Assets\Scripts\unitTest.cs" />
     <None Include="Assets\Doc.txt" />
     <Reference Include="UnityEditor.StandardEvents">
       <HintPath>C:/Users/Liam/Documents/Unity Projects/Combat Health System/Library/ScriptAssemblies/UnityEditor.StandardEvents.dll</HintPath>
