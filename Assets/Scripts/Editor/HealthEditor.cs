@@ -103,15 +103,24 @@ public class HealthEditor : Editor {
     //Called to draw the portion of the GUI for recharge options
     private void drawRechargeOptions ()
     {
+        //Display the option for the segment recharging
         EditorGUILayout.PropertyField(segment.FindPropertyRelative("canRecharge"), new GUIContent("Can Recharge",
                 "Determines if the segment can recharge its own health"));
 
+        //If it will recharge, display the settings for it
         if (segment.FindPropertyRelative("canRecharge").boolValue)
         {
+            EditorGUILayout.PropertyField(segment.FindPropertyRelative("damageResetsRecharge"), new GUIContent("Damage Resets Recharge",
+                "When the segment takes damage, will the recharge timer reset?"));
             EditorGUILayout.PropertyField(segment.FindPropertyRelative("rechargeRate"), new GUIContent("Recharge Rate",
                 "The speed at which the segment will recharge health after the timer expires"));
             EditorGUILayout.PropertyField(segment.FindPropertyRelative("rechargeDelay"), new GUIContent("Recharge Delay",
                 "The time it will take for the segment to begin recharging health after taking damage"));
+        }
+        //The segment will not recharge, disable damageRestsRecharge - Used to save performance on recharge checking
+        else
+        {
+            segment.FindPropertyRelative("damageResetsRecharge").boolValue = false;
         }
     }
 

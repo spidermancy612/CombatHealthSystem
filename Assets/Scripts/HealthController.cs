@@ -15,8 +15,6 @@ public class HealthController : MonoBehaviour {
     private HealingControl  healingControl;
     private RechargeControl rechargeControl;
 
-
-
     private int currentSegment;                         // Current segment for applying damage
     private int currentRechargeSegment;                 // Current segment for updating the recharge state
 
@@ -44,13 +42,19 @@ public class HealthController : MonoBehaviour {
 
         //Initialize segment control classes      
         healingControl = new HealingControl(segmentArray, this);
-        rechargeControl = new RechargeControl(segmentArray, this);
+        rechargeControl = new RechargeControl(segmentArray, this, healingControl, universalRecharge, universalDamageReset);
         damageControl = new DamageControl(segmentArray, rechargeControl, this);
 
         getAllHealthValues();
     }
 
-    //DONE
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    //Called every frame while the class/object is enabled
+    private void Update()
+    {
+        rechargeControl.updateCalls();
+    }
+
     #region Apply Damage
     /// <summary>
     /// Standard method for applying damage to a HealthController. Method will take provided damage paramter and apply it
@@ -271,7 +275,6 @@ public class HealthController : MonoBehaviour {
     }
     #endregion
 
-    //To Update
     #region Getter Methods
     /// <summary>
     /// Getter method that returns an array of floats representing the currentHealth variable on each of the HealthSegments
@@ -357,6 +360,7 @@ public class HealthController : MonoBehaviour {
     } 
 }
 
+#region Segment Data
 /// <summary>
 /// Struct used for holding all relevant data on a health segment. Structs used for access and modification speeds to cope with the likeihood that
 /// developers will be using this across a large number of objects and/or making modifications frequently. (Damage over time effects for example)
@@ -376,6 +380,7 @@ public struct HealthSegment
     public string[] specialTags;
 
     public bool canRecharge;
+    public bool damageResetsRecharge;
     public float rechargeRate;  
     public float rechargeDelay;
 
@@ -389,7 +394,6 @@ public struct HealthSegment
 
     public float currentHealth;   
     public float rechargeTimer;  
-
 }
 
 /// <summary>
@@ -397,7 +401,9 @@ public struct HealthSegment
 /// enum inside the struct
 /// </summary>
 public enum SegmentType { health, armour, shield, barrier }
+#endregion
 
+#region Control Classes
 /// <summary>
 /// Class handles all modification of segment values whenever an event occurs where damage has been taken.
 /// </summary>
@@ -501,9 +507,23 @@ class DamageControl
 /// </summary>
 class HealingControl
 {
+    private HealthSegment[] segmentArray;
+    private HealthController parent;
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    //Constructor
     public HealingControl(HealthSegment[] segArray, HealthController parent)
     {
+        segmentArray = segArray;
+        this.parent = parent;
+    }
 
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    //Called to add a set amount of health a specified segment
+    internal void addHealth (float health, HealthSegment segment)
+    {
+        segment.currentHealth += health;
+        if (segment.currentHealth > segment.maxHealth) segment.currentHealth = segment.maxHealth;
     }
 }
 
@@ -512,14 +532,104 @@ class HealingControl
 /// </summary>
 class RechargeControl
 {
-    public RechargeControl(HealthSegment[] segArray, HealthController parent)
-    {
+    private bool universalRecharge;
+    private bool universalReset;
 
+    private HealthSegment[] segmentArray;
+    private HealthController parent;
+    private HealingControl healingControl;
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    //Constructor
+    public RechargeControl(HealthSegment[] segArray, HealthController parent, HealingControl healingControl, bool universalRecharge, bool universalReset)
+    {
+        segmentArray = segArray;
+        this.parent = parent;
+        this.universalRecharge = universalRecharge;
+        this.universalReset = universalReset;
+        this.healingControl = healingControl;
     }
 
-    //TODO - resets when damage taken
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    //Called from the Update method for any methods that need to be called every frame in this class
+    internal void updateCalls ()
+    {
+        updateRechargeTimers();
+        updateRechargeHealth();
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    //Called whenever damage is taken by a segment to update the recharge states of either the damaged segment or all segments
     internal void damageTaken (HealthSegment segment)
     {
+        //Reset all the segment recharges
+        if (universalReset)
+        {
+            //Iterate through all segments
+            for (int i = 0; i < segmentArray.Length; i++)
+            {
+                //Only reset timer if damage reset is enabled
+                if (segmentArray[i].damageResetsRecharge)
+                {
+                    segmentArray[i].rechargeTimer = segmentArray[i].rechargeDelay;
+                }
+            }
+        }
+        //Otherwise we only reset this segment
+        else
+        {
+            //Only reset timer if damage reset enabled
+            if (segment.damageResetsRecharge)
+            {
+                segment.rechargeTimer = segment.rechargeDelay;
+            }
+        }
+    }
 
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    //Called every frame to update recharge timers on each segment
+    private void updateRechargeTimers ()
+    {
+        for (int i = 0; i < segmentArray.Length; i++)
+        {
+            if (segmentArray[i].canRecharge && segmentArray[i].rechargeTimer > 0 && segmentArray[i].isDisabled == false)
+            {
+                segmentArray[i].rechargeTimer -= Time.deltaTime;
+            }
+        }
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    //Called to update the health of each segment when needed after the recharge timer has expired
+    private void updateRechargeHealth ()
+    {
+        //Recharge only one segment at a time
+        if (universalRecharge)
+        {
+            //Iterate through possible segments from the lowest index
+            for (int i = 0; i < segmentArray.Length; i++)
+            {
+                //If the segment is missing health and the timer has expired
+                if (segmentArray[i].currentHealth < segmentArray[i].maxHealth && segmentArray[i].rechargeTimer <= 0 && segmentArray[i].isDisabled == false)
+                {
+                    healingControl.addHealth(Time.deltaTime * segmentArray[i].rechargeRate, segmentArray[i]);
+                    return; //Prevents later segments from recharging this frame
+                }
+            }
+        }
+        //Otherwise we can recharge all segments at once
+        else
+        {
+            //Iterate through segments
+            for (int i = 0; i < segmentArray.Length; i++)
+            {
+                //If the segment is missing health and the recharge timer has expired
+                if (segmentArray[i].currentHealth < segmentArray[i].maxHealth && segmentArray[i].rechargeTimer <= 0 && segmentArray[i].isDisabled == false)
+                {
+                    healingControl.addHealth(Time.deltaTime * segmentArray[i].rechargeRate, segmentArray[i]);
+                }
+            }
+        }
     }
 }
+#endregion
