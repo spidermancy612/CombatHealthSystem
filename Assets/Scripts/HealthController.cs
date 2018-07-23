@@ -65,6 +65,7 @@ public class HealthController : MonoBehaviour {
     /// <param name="damage">Float value - Damage to be applied</param>
     public void applyDamage(float damage)
     {
+        Debug.Log("Apply damage " + damage);
         //Iterate though all segment starting at the top layer
         for (int i = segmentArray.Length - 1; i >= 0; i--)
         {
@@ -74,10 +75,14 @@ public class HealthController : MonoBehaviour {
             //Only modify non-disbaled segments
             if (segmentArray[i].isDisabled == false)
             {
+                Debug.Log("About to apply");
                 //Update damage for segment type
                 damage = damageControl.getSegmentModifiedDamage(damage, segmentArray[i]);
+                Debug.Log("Modified damage: " + damage);
                 //Apply the damage and get new value
                 damage = damageControl.applyDamageToSegment(damage, segmentArray[i]);
+                Debug.Log("Damage after applying: " + damage);
+                Debug.Log("Current health after applying: " + segmentArray[i].currentHealth);
                 //Notify recharge states that damage has been taken
                 rechargeControl.damageTaken(segmentArray[i]);
             }

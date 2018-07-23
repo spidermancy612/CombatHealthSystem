@@ -260,6 +260,7 @@ GameObject:
   m_Component:
   - component: {fileID: 2095509122}
   - component: {fileID: 2095509121}
+  - component: {fileID: 2095509124}
   - component: {fileID: 2095509123}
   m_Layer: 0
   m_Name: Test Unit
@@ -280,32 +281,16 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   segmentArray:
-  - maxHealth: 0
-    startActive: 0
+  - maxHealth: 100
+    startActive: 1
     carryDamageToNextSegment: 0
     carryHealingToNextSegment: 0
     isDisabled: 0
     segmentType: 0
-    useTags: 0
-    specialTags: []
-    canRecharge: 0
-    damageResetsRecharge: 0
-    rechargeRate: 0
-    rechargeDelay: 0
-    armourDamageReduction: 0
-    minimumArmourDamage: 0
-    constantShieldDamage: 0
-    barrierDamageMitigation: 0
-    currentHealth: 0
-    rechargeTimer: 0
-  - maxHealth: 0
-    startActive: 0
-    carryDamageToNextSegment: 0
-    carryHealingToNextSegment: 0
-    isDisabled: 0
-    segmentType: 1
-    useTags: 0
-    specialTags: []
+    useTags: 1
+    specialTags:
+    - test1
+    - potato
     canRecharge: 0
     damageResetsRecharge: 0
     rechargeRate: 0
@@ -317,8 +302,8 @@ MonoBehaviour:
     currentHealth: 0
     rechargeTimer: 0
   universalRecharge: 1
-  universalDamageReset: 0
-  arraySize: 2
+  universalDamageReset: 1
+  arraySize: 1
 --- !u!4 &2095509122
 Transform:
   m_ObjectHideFlags: 0
@@ -341,5 +326,16 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: de0bde3116a41794d8cd7b96a12de134, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &2095509124
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 2095509120}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0c415e24e4e5aab428b483c0893b0ead, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
