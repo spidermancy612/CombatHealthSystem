@@ -39,8 +39,6 @@ public class HealthController : MonoBehaviour {
         healingControl = new HealingControl(segmentArray, this);
         rechargeControl = new RechargeControl(segmentArray, this, healingControl, universalRecharge, universalDamageReset);
         damageControl = new DamageControl(segmentArray, rechargeControl, this);
-
-        getAllHealthValues();
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -65,7 +63,6 @@ public class HealthController : MonoBehaviour {
     /// <param name="damage">Float value - Damage to be applied</param>
     public void applyDamage(float damage)
     {
-        Debug.Log("Apply damage " + damage);
         //Iterate though all segment starting at the top layer
         for (int i = segmentArray.Length - 1; i >= 0; i--)
         {
@@ -75,14 +72,10 @@ public class HealthController : MonoBehaviour {
             //Only modify non-disbaled segments
             if (segmentArray[i].isDisabled == false)
             {
-                Debug.Log("About to apply");
                 //Update damage for segment type
-                damage = damageControl.getSegmentModifiedDamage(damage, segmentArray[i]);
-                Debug.Log("Modified damage: " + damage);
+                damage = damageControl.getSegmentModifiedDamage(damage, i);
                 //Apply the damage and get new value
-                damage = damageControl.applyDamageToSegment(damage, segmentArray[i]);
-                Debug.Log("Damage after applying: " + damage);
-                Debug.Log("Current health after applying: " + segmentArray[i].currentHealth);
+                damage = damageControl.applyDamageToSegment(damage, i);
                 //Notify recharge states that damage has been taken
                 rechargeControl.damageTaken(segmentArray[i]);
             }
@@ -105,9 +98,9 @@ public class HealthController : MonoBehaviour {
             if (segmentArray[i].isDisabled == false)
             {
                 //Update damage for segment type if modifiers are not ignored
-                if (ignoreModifiers == false) damage = damageControl.getSegmentModifiedDamage(damage, segmentArray[i]);
+                if (ignoreModifiers == false) damage = damageControl.getSegmentModifiedDamage(damage, i);
                 //Apply the damage and get new value
-                damage = damageControl.applyDamageToSegment(damage, segmentArray[i]);
+                damage = damageControl.applyDamageToSegment(damage, i);
                 //Notify recharge states that damage has been taken
                 rechargeControl.damageTaken(segmentArray[i]);
             }
@@ -162,9 +155,9 @@ public class HealthController : MonoBehaviour {
             if (segmentArray[i].isDisabled == false && segmentArray[i].segmentType == type)
             {
                 //Modify damage if ignoreModifiers is false
-                if (ignoreModifiers == false) damage = damageControl.getSegmentModifiedDamage(damage, segmentArray[i]);
+                if (ignoreModifiers == false) damage = damageControl.getSegmentModifiedDamage(damage, i);
                 //Apply damage to the segment and get remaining damage
-                damage = damageControl.applyDamageToSegment(damage, segmentArray[i]);
+                damage = damageControl.applyDamageToSegment(damage, i);
                 //Notify recharge states that damage has been taken
                 rechargeControl.damageTaken(segmentArray[i]);
             }
@@ -192,9 +185,9 @@ public class HealthController : MonoBehaviour {
             if (stringMatched(new string[] { tag }, segmentArray[i]) && segmentArray[i].isDisabled == false)
             {
                 //Modify damage if ingoreModifiers is false
-                if (ignoreModifiers == false) damage = damageControl.getSegmentModifiedDamage(damage, segmentArray[i]);
+                if (ignoreModifiers == false) damage = damageControl.getSegmentModifiedDamage(damage, i);
                 //Apply damage to the segment and get remaining damage
-                damage = damageControl.applyDamageToSegment(damage, segmentArray[i]);
+                damage = damageControl.applyDamageToSegment(damage, i);
                 //Notify recharge states that damage has been taken
                 rechargeControl.damageTaken(segmentArray[i]);
             }
@@ -222,9 +215,9 @@ public class HealthController : MonoBehaviour {
             if (stringMatched(tags, segmentArray[i]) && segmentArray[i].isDisabled == false)
             {
                 //Modify damage if ingoreModifiers is false
-                if (ignoreModifiers == false) damage = damageControl.getSegmentModifiedDamage(damage, segmentArray[i]);
+                if (ignoreModifiers == false) damage = damageControl.getSegmentModifiedDamage(damage, i);
                 //Apply damage to the segment and get remaining damage
-                damage = damageControl.applyDamageToSegment(damage, segmentArray[i]);
+                damage = damageControl.applyDamageToSegment(damage, i);
                 //Notify recharge states that damage has been taken
                 rechargeControl.damageTaken(segmentArray[i]);
             }
@@ -244,9 +237,9 @@ public class HealthController : MonoBehaviour {
         if (index < 0 || index >= segmentArray.Length) return;
 
         //Modify the damage if enabled
-        if (ignoreModifiers == false) damage = damageControl.getSegmentModifiedDamage(damage, segmentArray[index]);
+        if (ignoreModifiers == false) damage = damageControl.getSegmentModifiedDamage(damage, index);
         //Apply the damage with no catch on the return
-        damageControl.applyDamageToSegment(damage, segmentArray[index]);
+        damageControl.applyDamageToSegment(damage, index);
 
         //Notify recharge states that damage was taken
         rechargeControl.damageTaken(segmentArray[index]);
@@ -286,7 +279,7 @@ public class HealthController : MonoBehaviour {
             if (health <= 0) return;
 
             //Apply health and get remaining for next segment - will return zero if carry healing disabled
-            health = healingControl.applyHealthToSegment(health, segmentArray[i]);
+            health = healingControl.applyHealthToSegment(health, i);
         }
     }
 
@@ -306,7 +299,7 @@ public class HealthController : MonoBehaviour {
             //Only apply health if segment types match
             if (segmentArray[i].segmentType == type)
             {
-                health = healingControl.applyHealthToSegment(health, segmentArray[i]);
+                health = healingControl.applyHealthToSegment(health, i);
             }
         }
     }
@@ -327,7 +320,7 @@ public class HealthController : MonoBehaviour {
             //Only apply health if tag matches one of the special tags
             if (stringMatched(new string[] {tag}, segmentArray[i]))
             {
-                health = healingControl.applyHealthToSegment(health, segmentArray[i]);
+                health = healingControl.applyHealthToSegment(health, i);
             }
         }
     }
@@ -348,7 +341,7 @@ public class HealthController : MonoBehaviour {
             //Only apply health if one of the provided tags matches the specialTags array
             if (stringMatched(tags, segmentArray[i]))
             {
-                health = healingControl.applyHealthToSegment(health, segmentArray[i]);
+                health = healingControl.applyHealthToSegment(health, i);
             }
         }
     }
@@ -510,22 +503,32 @@ class DamageControl
         this.parent = parent;
     }
 
+    internal float getCurrentHealth()
+    {
+        return segmentArray[0].currentHealth;
+    }
+
+    internal float getMaxHealth()
+    {
+        return segmentArray[0].maxHealth;
+    }
+
     #region Damage Modification
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     //Returns a modified float of the provided "damage" param based on the SegmentType of the provided segment
-    internal float getSegmentModifiedDamage (float damage, HealthSegment segment)
+    internal float getSegmentModifiedDamage (float damage, int index)
     {
         //Return modified damage based on segment type
-        switch (segment.segmentType)
+        switch (segmentArray[index].segmentType)
         {
             case SegmentType.health:
                 return damage;
             case SegmentType.armour:
-                return modifyArmourDamage(damage, segment.armourDamageReduction, segment.minimumArmourDamage);
+                return modifyArmourDamage(damage, segmentArray[index].armourDamageReduction, segmentArray[index].minimumArmourDamage);
             case SegmentType.shield:
-                return modifyShieldDamage(segment.constantShieldDamage);
+                return modifyShieldDamage(segmentArray[index].constantShieldDamage);
             case SegmentType.barrier:
-                return modifyBarrierDamage(damage, segment.barrierDamageMitigation);
+                return modifyBarrierDamage(damage, segmentArray[index].barrierDamageMitigation);
         }
 
         //Base return case that should never be reached
@@ -567,24 +570,24 @@ class DamageControl
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     //Handles applying damage to a specified segment based on the param values. Returns the remaining damage if there is 
     //extra damage to be applied to the next segment if the current segment has carryDamageToNextSegment set true.
-    internal float applyDamageToSegment (float damage, HealthSegment segment)
+    internal float applyDamageToSegment (float damage, int index)
     {
         //If we have more damage to apply than the segment has health
-        if (segment.currentHealth < damage)
+        if (segmentArray[index].currentHealth < damage)
         {
             //Update damage with the difference and set current health to zero
-            damage -= segment.currentHealth;
-            segment.currentHealth = 0;
+            damage -= segmentArray[index].currentHealth;
+            segmentArray[index].currentHealth = 0;
         }
         //Otherwise we can just apply all damage
         else
         {
-            segment.currentHealth -= damage;
+            segmentArray[index].currentHealth -= damage;
             damage = 0f;
         }
 
         //Return the remaining damage if we are carrying to the next segment
-        if (segment.carryDamageToNextSegment) return damage;
+        if (segmentArray[index].carryDamageToNextSegment) return damage;
         //Otherwise we will have no damage to continue with
         else return 0f;
     }
@@ -609,33 +612,33 @@ class HealingControl
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     //Handles applying health to the specified segment provided on the paramters. Returns remaining health if healing is 
     //carried to the next segment, else returns zero
-    internal float applyHealthToSegment (float health, HealthSegment segment)
+    internal float applyHealthToSegment (float health, int index)
     {
         //If we have more health than possible to add
-        if (segment.maxHealth - segment.currentHealth < health)
+        if (segmentArray[index].maxHealth - segmentArray[index].currentHealth < health)
         {
             //Update health for remaining value and set current health to max
-            health -= segment.maxHealth - segment.currentHealth;
-            segment.currentHealth = segment.maxHealth;
+            health -= segmentArray[index].maxHealth - segmentArray[index].currentHealth;
+            segmentArray[index].currentHealth = segmentArray[index].maxHealth;
         }
         //Otherwise we can just apply all the health
         else
         {
             //Add health and set health to zero
-            segment.currentHealth += health;
+            segmentArray[index].currentHealth += health;
             health = 0f;
         }
 
-        if (segment.carryHealingToNextSegment) return health;
+        if (segmentArray[index].carryHealingToNextSegment) return health;
         else return 0f;
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     //Called to add a set amount of health a specified segment
-    internal void addHealth (float health, HealthSegment segment)
+    internal void addHealth (float health, int index)
     {
-        segment.currentHealth += health;
-        if (segment.currentHealth > segment.maxHealth) segment.currentHealth = segment.maxHealth;
+        segmentArray[index].currentHealth += health;
+        if (segmentArray[index].currentHealth > segmentArray[index].maxHealth) segmentArray[index].currentHealth = segmentArray[index].maxHealth;
     }
 }
 
@@ -724,7 +727,7 @@ class RechargeControl
                 //If the segment is missing health and the timer has expired
                 if (segmentArray[i].currentHealth < segmentArray[i].maxHealth && segmentArray[i].rechargeTimer <= 0 && segmentArray[i].isDisabled == false)
                 {
-                    healingControl.addHealth(Time.deltaTime * segmentArray[i].rechargeRate, segmentArray[i]);
+                    healingControl.addHealth(Time.deltaTime * segmentArray[i].rechargeRate, i);
                     return; //Prevents later segments from recharging this frame
                 }
             }
@@ -738,7 +741,7 @@ class RechargeControl
                 //If the segment is missing health and the recharge timer has expired
                 if (segmentArray[i].currentHealth < segmentArray[i].maxHealth && segmentArray[i].rechargeTimer <= 0 && segmentArray[i].isDisabled == false)
                 {
-                    healingControl.addHealth(Time.deltaTime * segmentArray[i].rechargeRate, segmentArray[i]);
+                    healingControl.addHealth(Time.deltaTime * segmentArray[i].rechargeRate, i);
                 }
             }
         }

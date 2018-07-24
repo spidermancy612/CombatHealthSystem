@@ -6,6 +6,9 @@ public class HealthTester : MonoBehaviour {
 
     private HealthController controller;
 
+    public float health;
+    public SegmentType type;
+
     // Use this for initialization
     void Start()
     {
@@ -15,10 +18,10 @@ public class HealthTester : MonoBehaviour {
     // Update is called once per frame
     void Update()
     {
-        if (Input.GetKeyDown(KeyCode.Q)) controller.applyHealth(10);
-        if (Input.GetKeyDown(KeyCode.W)) controller.applyHealth(10, SegmentType.health);
-        if (Input.GetKeyDown(KeyCode.E)) controller.applyHealth(10, "test1");
-        if (Input.GetKeyDown(KeyCode.R)) controller.applyHealth(10, new string[] { "test1", "test2" });
-        if (Input.GetKeyDown(KeyCode.T)) controller.applyHealth(10, 0);
+        if (Input.GetKeyDown(KeyCode.Q)) controller.applyHealth(health);
+        if (Input.GetKeyDown(KeyCode.W)) controller.applyHealth(health, type);
+        if (Input.GetKeyDown(KeyCode.E)) controller.applyHealth(health, "test1");
+        if (Input.GetKeyDown(KeyCode.R)) controller.applyHealth(health, new string[] { "test1", "test2" });
+        if (Input.GetKeyDown(KeyCode.T)) controller.applyHealth(health, 1);
     }
 }
