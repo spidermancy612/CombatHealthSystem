@@ -46,6 +46,8 @@ public class HealthController : MonoBehaviour {
     private void Update()
     {
         rechargeControl.updateCalls();
+
+        if (segmentArray[0].currentHealth <= 0) deathEvent();
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
