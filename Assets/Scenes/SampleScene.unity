@@ -286,8 +286,8 @@ MonoBehaviour:
     carryDamageToNextSegment: 0
     carryHealingToNextSegment: 0
     isDisabled: 0
-    segmentType: 1
-    useTags: 0
+    segmentType: 0
+    useTags: 1
     specialTags:
     - test1
     - potato
@@ -301,7 +301,7 @@ MonoBehaviour:
     barrierDamageMitigation: 0
     currentHealth: 0
     rechargeTimer: 0
-  - maxHealth: 100
+  - maxHealth: 125
     startActive: 1
     carryDamageToNextSegment: 0
     carryHealingToNextSegment: 0
@@ -311,7 +311,7 @@ MonoBehaviour:
     specialTags:
     - test1
     - potato
-    canRecharge: 1
+    canRecharge: 0
     damageResetsRecharge: 0
     rechargeRate: 0
     rechargeDelay: 0
